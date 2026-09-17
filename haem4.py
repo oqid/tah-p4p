@@ -25,6 +25,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (registers 3d projection)
+from tqdm import tqdm
 
 # ---------------------------------------------------------------------------
 # 1. Model constants
@@ -407,7 +408,7 @@ def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
 
     results = []
     per_streamline_dfs = []
-    for sid_list in streamline_ids:
+    for sid_list in tqdm(streamline_ids, desc="Hemolysis", unit="line"):
         # keep only node ids that actually exist in the parsed data table
         sid_list = [n for n in sid_list if n in nodes.index]
         if len(sid_list) < 2:
@@ -754,16 +755,25 @@ if __name__ == "__main__":
 
     if GENERATE_OUTPUTS:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        run_id = f"{datetime.now():%Y-%m-%d_%H-%M-%S}_{Path(filepath).stem}"
+
+        try:
+            script_name = Path(__file__).stem
+        except NameError:
+            script_name = "haemolysis_pipeline_anyversion"
+
+        run_id = (
+            f"{datetime.now():%Y-%m-%d_%H-%M-%S}_"
+            f"{script_name}_"
+            f"{Path(filepath).stem}"
+        )
 
         output_paths = {
             "streamlines": OUTPUT_DIR / f"streamlines_3d_{run_id}.png",
-            "shear": OUTPUT_DIR / f"shear_vs_time_{run_id}.png",
-            "histogram": OUTPUT_DIR / f"hi_histogram_{run_id}.png",
-            "sa_pdf": OUTPUT_DIR / f"sa_pdf_{run_id}.png",
-            "summary": OUTPUT_DIR / f"streamline_summary_{run_id}.csv",
+            "shear":       OUTPUT_DIR / f"shear_vs_time_{run_id}.png",
+            "histogram":   OUTPUT_DIR / f"hi_histogram_{run_id}.png",
+            "sa_pdf":      OUTPUT_DIR / f"sa_pdf_{run_id}.png",
+            "summary":     OUTPUT_DIR / f"streamline_summary_{run_id}.csv",
         }
-
         plot_streamlines_3d(result["streamlines"], save_path=output_paths["streamlines"])
         plot_shear_vs_time(result["streamlines"], save_path=output_paths["shear"])
         plot_hi_histogram(result["summary"], save_path=output_paths["histogram"])
