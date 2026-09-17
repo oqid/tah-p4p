@@ -18,6 +18,9 @@ Author: Claude and Sevan Dalzell, MECHENG 700
 """
 
 import re
+from datetime import datetime
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -61,6 +64,10 @@ SA_LITERATURE_MEDIANS = {
     "50cc_TAH": 2.19,
     "35cc_TAH": 3.41,
 }
+
+# Set to False to run the analysis without writing plots or summary CSV files.
+GENERATE_OUTPUTS = True
+OUTPUT_DIR = Path("outputs")
 
 
 # ---------------------------------------------------------------------------
@@ -745,11 +752,26 @@ if __name__ == "__main__":
     result = run_pipeline(filepath)
     print_summary(result)
 
-    plot_streamlines_3d(result["streamlines"], save_path="streamlines_3d.png")
-    plot_shear_vs_time(result["streamlines"], save_path="shear_vs_time.png")
-    plot_hi_histogram(result["summary"], save_path="hi_histogram.png")
-    plot_sa_pdf(result["summary"], save_path="sa_pdf.png", label="This device")
+    if GENERATE_OUTPUTS:
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        run_id = f"{datetime.now():%Y-%m-%d_%H-%M-%S}_{Path(filepath).stem}"
 
-    result["summary"].to_csv("streamline_summary.csv", index=False)
-    print("Saved: streamlines_3d.png, shear_vs_time.png, hi_histogram.png, "
-          "sa_pdf.png, streamline_summary.csv")
+        output_paths = {
+            "streamlines": OUTPUT_DIR / f"streamlines_3d_{run_id}.png",
+            "shear": OUTPUT_DIR / f"shear_vs_time_{run_id}.png",
+            "histogram": OUTPUT_DIR / f"hi_histogram_{run_id}.png",
+            "sa_pdf": OUTPUT_DIR / f"sa_pdf_{run_id}.png",
+            "summary": OUTPUT_DIR / f"streamline_summary_{run_id}.csv",
+        }
+
+        plot_streamlines_3d(result["streamlines"], save_path=output_paths["streamlines"])
+        plot_shear_vs_time(result["streamlines"], save_path=output_paths["shear"])
+        plot_hi_histogram(result["summary"], save_path=output_paths["histogram"])
+        plot_sa_pdf(result["summary"], save_path=output_paths["sa_pdf"], label="This device")
+
+        result["summary"].to_csv(output_paths["summary"], index=False)
+        print("Saved outputs:")
+        for output_path in output_paths.values():
+            print(f"  {output_path}")
+    else:
+        print("Output generation disabled (GENERATE_OUTPUTS=False).")
