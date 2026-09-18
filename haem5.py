@@ -1,18 +1,43 @@
 """
 Hemolysis pipeline for CFD-Post streamline exports (CFX / CFD-Post "Generic" export format).
 
-Implements the discretized cumulative Heuser-Opitz / Giersiepen power-law model
-described in section 2.1 of the MECHENG 700 mid-year report:
+Implements two Lagrangian power-law damage-accumulation models, following the
+naming/derivation in Taskin et al., "Evaluation of Eulerian and Lagrangian
+Models for Hemolysis Estimation," ASAIO J 2012;58:363-372:
+
+HI2 (their Eq. 4) - discretized temporal derivative of the base Giersiepen
+power law, described in section 2.1 of the MECHENG 700 mid-year report:
 
     d(HI%)_i = beta * A * t_i^(beta-1) * tau_i^alpha * dt_i
     HI% = sum_i d(HI%)_i
 
-then converts to NIH via:
+Note: t_i is *cumulative* time since the start of the streamline, so because
+beta < 1 (beta-1 is negative), a given (tau, dt) pair contributes LESS damage
+the later it occurs along the path. Taskin et al. identify this as HI2's key
+weakness - it systematically under-predicts hemolysis when the high-shear
+region occurs mid- or late-path rather than at the inlet, and it had the
+lowest correlation coefficients of the Lagrangian methods they tested.
+
+HI3 (their Eq. 5, after Garon & Farinas 2004) - sum of purely local segment
+damage, with no dependence on cumulative path time:
+
+    HI%_i = [ A^(1/beta) * tau_i^(alpha/beta) * dt_i ]^beta
+    HI%   = sum_i HI%_i
+
+HI3 does not have the late-path suppression artifact of HI2, is independent
+of time-step size, and gave the smallest relative error against experiment
+of the Lagrangian methods in Taskin et al. (Table 3). Both are computed here
+so they can be compared directly on the same streamline data.
+
+Both convert to NIH via:
 
     NIH = HI% * (1 - Hct) * Hb
 
 Usage:
     python hemolysis_pipeline.py path/to/export.csv
+
+Useful comparison macro:
+    python haem5.py export.csv --compare-constants
 
 Author: Claude and Sevan Dalzell, MECHENG 700 
 """
@@ -31,11 +56,32 @@ from tqdm import tqdm
 # 1. Model constants
 # ---------------------------------------------------------------------------
 
-# Giersiepen et al. power-law coefficients (commonly cited values; confirm
-# against the exact source you cited in the report before trusting results).
-A_COEF = 3.62e-5      # units depend on source - check your reference! (giersiepen et al, notably NOT heuser-optiz or zhang)
-ALPHA = 2.416
-BETA = 0.785
+# Power-law coefficients (Table 1, Taskin et al. 2012). Three sets are
+# commonly cited in the literature and give quite different HI predictions
+# (their Table 3) - each was fit over a different shear-stress/exposure-time
+# range, so pick (or sweep) whichever best matches your own streamline data.
+#
+#   name  | source                      | valid tau range | valid t range
+#   ------|-----------------------------|------------------|---------------
+#   GW    | Giersiepen et al. 1990      | <255 Pa          | <700 ms
+#   HO    | Heuser & Opitz 1980         | <700 Pa          | <700 ms
+#   TZ    | Zhang et al. 2011           | 50-320 Pa        | <1500 ms
+POWER_LAW_CONSTANTS = {
+    "GW": {"A": 3.62e-5, "alpha": 2.416, "beta": 0.785,
+           "tau_max_Pa": 255.0, "t_max_s": 0.700},
+    "HO": {"A": 1.80e-6, "alpha": 1.991, "beta": 0.765,
+           "tau_max_Pa": 700.0, "t_max_s": 0.700},
+    "TZ": {"A": 1.228e-5, "alpha": 1.9918, "beta": 0.6606,
+           "tau_max_Pa": 320.0, "t_max_s": 1.500},
+}
+
+# Active default constant set used when a function is called without
+# explicit A/alpha/beta overrides. Change this key (or pass constants
+# explicitly - see run_pipeline_all_constants below) to switch sets.
+ACTIVE_CONSTANTS = "GW"
+A_COEF = POWER_LAW_CONSTANTS[ACTIVE_CONSTANTS]["A"]
+ALPHA = POWER_LAW_CONSTANTS[ACTIVE_CONSTANTS]["alpha"]
+BETA = POWER_LAW_CONSTANTS[ACTIVE_CONSTANTS]["beta"]
 
 # Blood properties used for NIH conversion (from your report, section 2.1)
 HCT = 0.30             # hematocrit (volume fraction)
@@ -67,7 +113,7 @@ SA_LITERATURE_MEDIANS = {
 }
 
 # Set to False to run the analysis without writing plots or summary CSV files.
-GENERATE_OUTPUTS = True
+GENERATE_OUTPUTS = False
 OUTPUT_DIR = Path("outputs")
 
 
@@ -299,15 +345,20 @@ def compute_streamline_hemolysis(nodes, streamline_node_ids,
                                   A=A_COEF, alpha=ALPHA, beta=BETA):
     """
     Builds a per-streamline dataframe (position, shear, velocity, arc length,
-    dt, cumulative time) and evaluates the discretized hemolysis sum.
+    dt, cumulative time) and evaluates two discretized Lagrangian hemolysis
+    sums along it - HI2 and HI3, per Taskin et al. 2012 (Eqs. 4 and 5).
+
+    HI2 (temporal-derivative form) depends on cumulative path time t_i, and
+    because beta < 1 this makes it under-weight shear encountered later in
+    the streamline (see module docstring). HI3 (local/linearized form) sums
+    a purely local per-segment term and has no such time-ordering bias.
 
     Returns
     -------
-    df : pd.DataFrame for this streamline (one row per node along the path)
-    HI_percent : float, total HI% accumulated along this streamline
-    """
-    """
-    Builds a per-streamline dataframe and evaluates the discretized hemolysis sum.
+    df : pd.DataFrame for this streamline (one row per node along the path),
+         with per-segment and cumulative columns for both HI2 and HI3
+    HI2_percent : float, total HI2% accumulated along this streamline
+    HI3_percent : float, total HI3% accumulated along this streamline
     """
     pts = nodes.loc[streamline_node_ids].copy()
     pts = pts.reset_index()
@@ -326,7 +377,7 @@ def compute_streamline_hemolysis(nodes, streamline_node_ids,
     # Calculate a reasonable minimum velocity (1% of mean velocity in this streamline)
     mean_vel = np.mean(vel[vel > 0]) if np.any(vel > 0) else 0.1
     min_vel = max(mean_vel * 0.01, 0.001)  # 1% of mean, but at least 0.001 m/s
-    
+
     # Cap velocities at the minimum to avoid infinite exposure time
     seg_vel = np.maximum(seg_vel, min_vel)
     
@@ -335,22 +386,47 @@ def compute_streamline_hemolysis(nodes, streamline_node_ids,
     pts["dt"] = dt
     pts["t_cumulative"] = np.cumsum(dt)
 
-    # Discretized Giersiepen sum
     t = pts["t_cumulative"].to_numpy()
     tau = pts["shear"].to_numpy()
     dt_arr = pts["dt"].to_numpy()
 
+    # --- HI2: discretized temporal derivative (Taskin et al. Eq. 4) ---
+    # Depends on cumulative time t since the streamline start via t^(beta-1).
     with np.errstate(divide="ignore", invalid="ignore"):
         t_pow = np.where(t > 0, t ** (beta - 1), 0.0)
-    
-    dHI = beta * A * t_pow * (tau ** alpha) * dt_arr
-    dHI = np.nan_to_num(dHI, nan=0.0, posinf=0.0, neginf=0.0)
 
-    pts["dHI_percent"] = dHI
-    pts["HI_percent_cumulative"] = np.cumsum(dHI)
+    dHI2 = beta * A * t_pow * (tau ** alpha) * dt_arr
+    dHI2 = np.nan_to_num(dHI2, nan=0.0, posinf=0.0, neginf=0.0)
 
-    HI_percent_total = pts["HI_percent_cumulative"].iloc[-1] if len(pts) else 0.0
-    return pts, HI_percent_total
+    pts["dHI2_percent"] = dHI2
+    pts["HI2_percent_cumulative"] = np.cumsum(dHI2)
+
+    # --- HI3: local/linearized sum (Taskin et al. Eq. 5, after Garon & Farinas) ---
+    # Each segment contributes a purely local linear term
+    # (A^(1/beta) * tau_i^(alpha/beta) * dt_i); these are SUMMED first, and
+    # the *running/total sum* is raised to the power beta only at the end.
+    # This ordering is what makes HI3 exactly reproduce Eq. 1 for uniform
+    # shear regardless of how finely the path is discretized, and what
+    # makes it insensitive to *when* along the path the shear occurs -
+    # raising each segment to beta before summing does NOT have either
+    # property (it diverges as the number of segments increases, since
+    # beta < 1 makes the per-segment sum super-additive).
+    inner_term = A ** (1.0 / beta) * (tau ** (alpha / beta)) * dt_arr
+    inner_term = np.nan_to_num(inner_term, nan=0.0, posinf=0.0, neginf=0.0)
+    inner_cumsum = np.cumsum(inner_term)
+
+    pts["HI3_inner_term"] = inner_term
+    # Running HI3 "profile" along the path (monotonic, reaches HI3 total
+    # at the last point) - useful for plotting, not itself additive.
+    pts["HI3_percent_cumulative"] = inner_cumsum ** beta
+
+    # Backwards-compatible aliases (old column/variable names -> HI2)
+    pts["dHI_percent"] = pts["dHI2_percent"]
+    pts["HI_percent_cumulative"] = pts["HI2_percent_cumulative"]
+
+    HI2_percent_total = pts["HI2_percent_cumulative"].iloc[-1] if len(pts) else 0.0
+    HI3_percent_total = pts["HI3_percent_cumulative"].iloc[-1] if len(pts) else 0.0
+    return pts, HI2_percent_total, HI3_percent_total
 
 
 def compute_streamline_SA(pts):
@@ -413,12 +489,15 @@ def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
         sid_list = [n for n in sid_list if n in nodes.index]
         if len(sid_list) < 2:
             continue
-        df, HI_total = compute_streamline_hemolysis(nodes, sid_list, A, alpha, beta)
+        df, HI2_total, HI3_total = compute_streamline_hemolysis(nodes, sid_list, A, alpha, beta)
         df, SA_total = compute_streamline_SA(df)
         per_streamline_dfs.append(df)
         results.append({
             "n_points": len(sid_list),
-            "HI_percent": HI_total,
+            "HI2_percent": HI2_total,
+            "HI3_percent": HI3_total,
+            # Backwards-compatible alias (old column name -> HI2)
+            "HI_percent": HI2_total,
             "SA_dyne_s_cm2": SA_total,
             "mean_inlet_velocity": df["vel"].iloc[0],
         })
@@ -433,10 +512,18 @@ def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
     # evenly spaced -> equal area weighting, so velocity approximates flux share)
     weights = summary["mean_inlet_velocity"].to_numpy()
     weights = weights / weights.sum()
-    device_HI_percent = float(np.sum(summary["HI_percent"].to_numpy() * weights))
+    device_HI2_percent = float(np.sum(summary["HI2_percent"].to_numpy() * weights))
+    device_HI3_percent = float(np.sum(summary["HI3_percent"].to_numpy() * weights))
+    # Backwards-compatible alias (old name -> HI2)
+    device_HI_percent = device_HI2_percent
 
-    device_NIH = device_HI_percent * (1 - HCT) * HB  # g/100L (per report eq. 3 units)
-    device_NIH_mg = device_NIH * 1000.0  # convert g/100L -> mg/100L for comparison
+    def _to_nih_mg(hi_percent):
+        nih_g = hi_percent * (1 - HCT) * HB  # g/100L (per report eq. 3 units)
+        return nih_g * 1000.0  # convert g/100L -> mg/100L for comparison
+
+    device_NIH_mg = _to_nih_mg(device_HI2_percent)          # backwards-compatible alias
+    device_HI2_NIH_mg = _to_nih_mg(device_HI2_percent)
+    device_HI3_NIH_mg = _to_nih_mg(device_HI3_percent)
 
     # Device-level SA statistics, mirroring the "thrombogenic footprint"
     # reported in Marom et al. 2014: the median of the SA distribution
@@ -452,11 +539,80 @@ def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
         "nodes": nodes,
         "streamlines": per_streamline_dfs,
         "summary": summary,
+        # Backwards-compatible aliases (old keys -> HI2, the method previously
+        # implemented here) - kept so existing scripts/plots don't break.
         "device_HI_percent": device_HI_percent,
         "device_NIH_mg_per_100L": device_NIH_mg,
+        # New: explicit HI2 vs HI3 comparison
+        "device_HI2_percent": device_HI2_percent,
+        "device_HI3_percent": device_HI3_percent,
+        "device_HI2_NIH_mg_per_100L": device_HI2_NIH_mg,
+        "device_HI3_NIH_mg_per_100L": device_HI3_NIH_mg,
         "device_SA_median_dyne_s_cm2": device_SA_median,
         "device_SA_prob_above_hellums": device_SA_prob_above_threshold,
     }
+
+
+def check_constant_range_coverage(result, constants_name):
+    """
+    Reports what fraction of streamline data falls outside the tau/t range
+    that a given power-law constant set was actually fit over (Table 1,
+    Taskin et al. 2012). Extrapolating a regression fit outside its support
+    is a second, independent source of error on top of model choice (HI2
+    vs HI3), so this is worth checking before trusting a given constant set.
+    """
+    limits = POWER_LAW_CONSTANTS[constants_name]
+    all_tau = np.concatenate([df["shear"].to_numpy()[1:] for df in result["streamlines"]])
+    all_t = np.concatenate([df["t_cumulative"].to_numpy()[1:] for df in result["streamlines"]])
+
+    frac_tau_over = float(np.mean(all_tau > limits["tau_max_Pa"])) if len(all_tau) else 0.0
+    frac_t_over = float(np.mean(all_t > limits["t_max_s"])) if len(all_t) else 0.0
+
+    print(f"[{constants_name}] fitted range: tau < {limits['tau_max_Pa']:.0f} Pa, "
+          f"t < {limits['t_max_s']*1000:.0f} ms")
+    print(f"  segments with tau over range: {frac_tau_over*100:.1f}%")
+    print(f"  segments with t over range:   {frac_t_over*100:.1f}%")
+    return frac_tau_over, frac_t_over
+
+
+def run_pipeline_all_constants(filepath, constant_names=("GW", "HO", "TZ")):
+    """
+    Runs the full pipeline once per named constant set (see
+    POWER_LAW_CONSTANTS) and prints a compact HI2 vs HI3 vs NIH comparison
+    table across all of them - useful for exactly the "how sensitive am I
+    to which literature constants I use" check.
+
+    Returns
+    -------
+    dict[str, dict] : one full run_pipeline() result per constant set name
+    comparison : pd.DataFrame summarizing device-level results across sets
+    """
+    all_results = {}
+    rows = []
+    for name in constant_names:
+        c = POWER_LAW_CONSTANTS[name]
+        res = run_pipeline(filepath, A=c["A"], alpha=c["alpha"], beta=c["beta"])
+        all_results[name] = res
+        frac_tau_over, frac_t_over = check_constant_range_coverage(res, name)
+        rows.append({
+            "constants": name,
+            "HI2_percent": res["device_HI2_percent"],
+            "HI3_percent": res["device_HI3_percent"],
+            "HI2_NIH_mg_per_100L": res["device_HI2_NIH_mg_per_100L"],
+            "HI3_NIH_mg_per_100L": res["device_HI3_NIH_mg_per_100L"],
+            "frac_segments_tau_over_range": frac_tau_over,
+            "frac_segments_t_over_range": frac_t_over,
+        })
+
+    comparison = pd.DataFrame(rows).set_index("constants")
+    print("\n" + "=" * 70)
+    print("Constant-set comparison (device-level, flow-weighted):")
+    print(comparison.to_string(float_format=lambda x: f"{x:.4g}"))
+    print(f"SynCardia 50cc literature NIH: {SYNCARDIA_50CC_NIH} +/- 12.42 mg/100L")
+    print(f"ASTM acceptable limit:         {ASTM_LIMIT_NIH} mg/100L")
+    print("=" * 70)
+
+    return all_results, comparison
 
 
 # ---------------------------------------------------------------------------
@@ -586,12 +742,19 @@ def plot_shear_vs_time(streamline_dfs, save_path=None, n_lines=8):
 
 
 def plot_hi_histogram(summary, save_path=None):
-    fig, ax = plt.subplots(figsize=(7, 5))
-    ax.hist(summary["HI_percent"], bins=30, color="#c0392b", edgecolor="black", alpha=0.85)
-    ax.set_xlabel("Streamline HI% (unweighted)")
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
+    ax, ax2 = axes
+    ax.hist(summary["HI2_percent"], bins=30, color="#c0392b", edgecolor="black", alpha=0.85)
+    ax.set_xlabel("Streamline HI2% (unweighted)")
     ax.set_ylabel("Number of streamlines")
-    ax.set_title("Distribution of per-streamline hemolysis index")
+    ax.set_title("HI2 (temporal-derivative form)")
     ax.grid(alpha=0.3)
+
+    ax2.hist(summary["HI3_percent"], bins=30, color="#2980b9", edgecolor="black", alpha=0.85)
+    ax2.set_xlabel("Streamline HI3% (unweighted)")
+    ax2.set_title("HI3 (local/linearized form)")
+    ax2.grid(alpha=0.3)
+
     plt.tight_layout()
     if save_path:
         plt.savefig(save_path, dpi=150)
@@ -715,8 +878,16 @@ def plot_sa_pdf(summary, save_path=None, label=None, threshold=HELLUMS_THRESHOLD
 def print_summary(result):
     print("=" * 60)
     print(f"Streamlines processed:        {len(result['summary'])}")
-    print(f"Device HI% (flow-weighted):   {result['device_HI_percent']:.6e} %")
-    print(f"Device NIH:                   {result['device_NIH_mg_per_100L']:.4f} mg/100L")
+    print(f"Constants used:                A={A_COEF:.4g}  alpha={ALPHA:.4g}  beta={BETA:.4g} "
+          f"({ACTIVE_CONSTANTS})")
+    print("-" * 60)
+    print("HI2 (temporal-derivative form, Taskin et al. Eq. 4):")
+    print(f"  Device HI2% (flow-weighted): {result['device_HI2_percent']:.6e} %")
+    print(f"  Device NIH (from HI2):       {result['device_HI2_NIH_mg_per_100L']:.4f} mg/100L")
+    print("HI3 (local/linearized form, Taskin et al. Eq. 5):")
+    print(f"  Device HI3% (flow-weighted): {result['device_HI3_percent']:.6e} %")
+    print(f"  Device NIH (from HI3):       {result['device_HI3_NIH_mg_per_100L']:.4f} mg/100L")
+    print("-" * 60)
     print(f"SynCardia 50cc literature:    {SYNCARDIA_50CC_NIH} +/- 12.42 mg/100L")
     print(f"ASTM acceptable limit:        {ASTM_LIMIT_NIH} mg/100L")
     print("-" * 60)
@@ -746,11 +917,19 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
-        print("Usage: python hemolysis_pipeline.py <export.csv>")
+        print("Usage: python hemolysis_pipeline.py <export.csv> [--compare-constants]")
         sys.exit(1)
 
     filepath = sys.argv[1]
-    result = run_pipeline(filepath)
+
+    if "--compare-constants" in sys.argv:
+        # Sweep GW/HO/TZ constants and print a comparison table; use the
+        # active-default set's result (GW) for the plots/CSV below.
+        all_results, comparison = run_pipeline_all_constants(filepath)
+        result = all_results[ACTIVE_CONSTANTS]
+    else:
+        result = run_pipeline(filepath)
+
     print_summary(result)
 
     if GENERATE_OUTPUTS:
