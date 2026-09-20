@@ -1,4 +1,11 @@
 """
+
+
+This is a variation of haem5.py where im checking for if too many of the streamlines
+get floored by the min velocity, or recirculate too many times and get ignored
+
+
+
 Hemolysis pipeline for CFD-Post streamline exports (CFX / CFD-Post "Generic" export format).
 
 Implements two Lagrangian power-law damage-accumulation models, following the
@@ -56,16 +63,6 @@ from tqdm import tqdm
 # 1. Model constants
 # ---------------------------------------------------------------------------
 
-# Power-law coefficients (Table 1, Taskin et al. 2012). Three sets are
-# commonly cited in the literature and give quite different HI predictions
-# (their Table 3) - each was fit over a different shear-stress/exposure-time
-# range, so pick (or sweep) whichever best matches your own streamline data.
-#
-#   name  | source                      | valid tau range | valid t range
-#   ------|-----------------------------|------------------|---------------
-#   GW    | Giersiepen et al. 1990      | <255 Pa          | <700 ms
-#   HO    | Heuser & Opitz 1980         | <700 Pa          | <700 ms
-#   TZ    | Zhang et al. 2011           | 50-320 Pa        | <1500 ms
 POWER_LAW_CONSTANTS = {
     "GW": {"A": 3.62e-5, "alpha": 2.416, "beta": 0.785,
            "tau_max_Pa": 255.0, "t_max_s": 0.700},
@@ -75,47 +72,30 @@ POWER_LAW_CONSTANTS = {
            "tau_max_Pa": 320.0, "t_max_s": 1.500},
 }
 
-# Active default constant set used when a function is called without
-# explicit A/alpha/beta overrides. Change this key (or pass constants
-# explicitly - see run_pipeline_all_constants below) to switch sets.
 ACTIVE_CONSTANTS = "GW"
 A_COEF = POWER_LAW_CONSTANTS[ACTIVE_CONSTANTS]["A"]
 ALPHA = POWER_LAW_CONSTANTS[ACTIVE_CONSTANTS]["alpha"]
 BETA = POWER_LAW_CONSTANTS[ACTIVE_CONSTANTS]["beta"]
 
-# Blood properties used for NIH conversion (from your report, section 2.1)
 HCT = 0.30             # hematocrit (volume fraction)
 HB = 150.0             # g/L
 
-# Literature comparison points
 SYNCARDIA_50CC_NIH = 37.15   # mg/100L, +/- 12.42
 ASTM_LIMIT_NIH = 100.0       # mg/100L  (0.1 g/100L expressed in mg/100L)
 
-# Stress-Accumulation (SA) model - Alemu & Bluestein / Marom et al. formulation.
-# Unlike the Giersiepen power law, SA is simply the running linear product of
-# stress magnitude and exposure time along a platelet's trajectory:
-#     SA_i = sum_k  tau_k * dt_k
-# It is reported in dyne*s/cm^2 in the TAH literature (Marom et al. 2014,
-# J Cardiovasc Transl Res). Shear here is assumed to be in Pa, so convert:
-#     1 Pa = 10 dyne/cm^2  ->  1 Pa*s = 10 dyne*s/cm^2
 PA_S_TO_DYNE_S_CM2 = 10.0
 
-# Hellums criterion: threshold SA above which platelet activation becomes
-# likely (Hellums 1994; used as the safety-margin benchmark in Marom et al.).
 HELLUMS_THRESHOLD_DYNE_S_CM2 = 35.0
 
-# Literature median SAs from Marom et al. 2014 Fig. 5, for sanity-checking
-# results against a comparable TAH geometry (dyne*s/cm^2).
 SA_LITERATURE_MEDIANS = {
     "70cc_TAH": 1.12,
     "50cc_TAH": 2.19,
     "35cc_TAH": 3.41,
 }
 
-# Set to False to run the analysis without writing plots or summary CSV files.
 GENERATE_OUTPUTS = True
 OUTPUT_DIR = Path("outputs")
-
+OUTPUT_DIR.mkdir(exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # 2. Parsing the CFD-Post "Generic" export format
@@ -133,7 +113,6 @@ def parse_cfd_post_export(filepath):
     with open(filepath, "r") as f:
         text = f.read()
 
-    # Split into bracketed sections, e.g. [Name], [Data], [Lines]
     sections = {}
     current = None
     buf = []
@@ -157,7 +136,6 @@ def parse_cfd_post_export(filepath):
             "were both ticked in the CFD-Post export dialog."
         )
 
-    # --- Parse [Data] ---
     data_lines = [l for l in sections["Data"] if l.strip() != ""]
     header = data_lines[0]
     n_cols = len(header.split("\t")) if "\t" in header else len(header.split())
@@ -167,17 +145,13 @@ def parse_cfd_post_export(filepath):
         parts = l.replace(",", "\t").split()
         parts = [p for p in parts if p != ""]
         if len(parts) == n_cols:
-            # No leading node-id column -> this is a release-point row,
-            # assign it a node id in file order later.
             node_id = None
             vals = parts
         else:
-            # Leading node-id column present
             node_id = int(float(parts[0]))
             vals = parts[1:]
         rows.append((node_id, vals))
 
-    # Expected value columns: X, Y, Z, shear, Velocity, X(dup), Y(dup), Z(dup)
     parsed = []
     auto_id = 0
     for node_id, vals in rows:
@@ -191,7 +165,6 @@ def parse_cfd_post_export(filepath):
     nodes = pd.DataFrame(parsed, columns=["node_id", "x", "y", "z", "shear", "vel"])
     nodes = nodes.drop_duplicates(subset="node_id").set_index("node_id").sort_index()
 
-    # --- Parse [Lines], or fall back to [Faces] ---
     if "Lines" in sections:
         line_pairs = []
         for l in sections["Lines"]:
@@ -207,19 +180,6 @@ def parse_cfd_post_export(filepath):
 
 
 def _reconstruct_positions_from_faces(nodes, faces_lines):
-    """
-    CFD-Post exports a streamline plotted as a Ribbon/Tube (rather than a plain
-    Line) as a [Faces] section instead of [Lines]: every point along the path
-    is duplicated across two parallel rails (e.g. a tiny z-offset), and each
-    quad face stitches an adjacent pair of rail-points together.
-
-    Within any one face, the two SHORT edges are "rungs" joining the same
-    physical point across its two duplicate node ids; the two LONG edges join
-    that point to its neighbour along the streamline. Classifying edges by
-    relative length (not an absolute distance threshold) lets this collapse
-    the duplicates back into single points and rebuild the ordered line pairs
-    regardless of the export's rail spacing.
-    """
     faces = []
     for l in faces_lines:
         parts = [p for p in l.replace(",", "\t").split() if p != ""]
@@ -253,9 +213,9 @@ def _reconstruct_positions_from_faces(nodes, faces_lines):
         edges = [(n0, n1), (n1, n2), (n2, n3), (n3, n0)]
         lens = [edge_len(a, b) for a, b in edges]
         order = np.argsort(lens)
-        for i in order[:2]:      # two shortest -> same-point "rung"
+        for i in order[:2]:
             union(*edges[i])
-        for i in order[2:]:      # two longest -> streamline-direction edge
+        for i in order[2:]:
             long_edges.add(edges[i])
 
     pos_of = {n: find(n) for n in nodes.index}
@@ -309,16 +269,6 @@ def _reconstruct_positions_from_faces(nodes, faces_lines):
 
 
 def reconstruct_streamlines(line_pairs):
-    """
-    Walks the [Lines] connectivity pairs and splits them into individual
-    streamlines. A new streamline starts whenever the next pair's start
-    node does not match the previous pair's end node.
-
-    Returns
-    -------
-    list of lists, each inner list is the ordered sequence of node ids
-    for one streamline.
-    """
     streamlines = []
     current = None
 
@@ -347,18 +297,6 @@ def compute_streamline_hemolysis(nodes, streamline_node_ids,
     Builds a per-streamline dataframe (position, shear, velocity, arc length,
     dt, cumulative time) and evaluates two discretized Lagrangian hemolysis
     sums along it - HI2 and HI3, per Taskin et al. 2012 (Eqs. 4 and 5).
-
-    HI2 (temporal-derivative form) depends on cumulative path time t_i, and
-    because beta < 1 this makes it under-weight shear encountered later in
-    the streamline (see module docstring). HI3 (local/linearized form) sums
-    a purely local per-segment term and has no such time-ordering bias.
-
-    Returns
-    -------
-    df : pd.DataFrame for this streamline (one row per node along the path),
-         with per-segment and cumulative columns for both HI2 and HI3
-    HI2_percent : float, total HI2% accumulated along this streamline
-    HI3_percent : float, total HI3% accumulated along this streamline
     """
     pts = nodes.loc[streamline_node_ids].copy()
     pts = pts.reset_index()
@@ -372,15 +310,27 @@ def compute_streamline_hemolysis(nodes, streamline_node_ids,
     vel = pts["vel"].to_numpy()
     seg_vel = np.zeros(len(pts))
     seg_vel[1:] = 0.5 * (vel[1:] + vel[:-1])
-    
+
     # --- FIX: Better velocity handling ---
-    # Calculate a reasonable minimum velocity (1% of mean velocity in this streamline)
     mean_vel = np.mean(vel[vel > 0]) if np.any(vel > 0) else 0.1
     min_vel = max(mean_vel * 0.01, 0.001)  # 1% of mean, but at least 0.001 m/s
 
-    # Cap velocities at the minimum to avoid infinite exposure time
+    # --- NEW: per-segment truncation diagnostic (see diagnose_streamline_coverage) ---
+    truncated_mask = (vel > 0) & (vel < min_vel)
+    if np.any(truncated_mask):
+        num_truncated = np.sum(truncated_mask)
+        print(f"[TRUNCATION] Streamline: {num_truncated} values truncated to min_vel={min_vel:.6f} "
+              f"(mean_vel={mean_vel:.6f}, original min={np.min(vel[truncated_mask]):.6f})")
+        frac = num_truncated / np.sum(vel > 0)
+        if frac > 0.05:  # only warn if >5% truncated
+            print(f"[TRUNCATION WARNING] {frac*100:.1f}% of values truncated!")
+
+    # Cap velocities at the minimum to avoid infinite exposure time.
+    # --- NEW: record which segments were floored so coverage diagnostics can see it ---
+    seg_vel_floored = seg_vel < min_vel
     seg_vel = np.maximum(seg_vel, min_vel)
-    
+    pts["seg_vel_floored"] = seg_vel_floored
+
     dt = np.zeros(len(pts))
     dt[1:] = seg_len[1:] / seg_vel[1:]
     pts["dt"] = dt
@@ -391,7 +341,6 @@ def compute_streamline_hemolysis(nodes, streamline_node_ids,
     dt_arr = pts["dt"].to_numpy()
 
     # --- HI2: discretized temporal derivative (Taskin et al. Eq. 4) ---
-    # Depends on cumulative time t since the streamline start via t^(beta-1).
     with np.errstate(divide="ignore", invalid="ignore"):
         t_pow = np.where(t > 0, t ** (beta - 1), 0.0)
 
@@ -402,22 +351,11 @@ def compute_streamline_hemolysis(nodes, streamline_node_ids,
     pts["HI2_percent_cumulative"] = np.cumsum(dHI2)
 
     # --- HI3: local/linearized sum (Taskin et al. Eq. 5, after Garon & Farinas) ---
-    # Each segment contributes a purely local linear term
-    # (A^(1/beta) * tau_i^(alpha/beta) * dt_i); these are SUMMED first, and
-    # the *running/total sum* is raised to the power beta only at the end.
-    # This ordering is what makes HI3 exactly reproduce Eq. 1 for uniform
-    # shear regardless of how finely the path is discretized, and what
-    # makes it insensitive to *when* along the path the shear occurs -
-    # raising each segment to beta before summing does NOT have either
-    # property (it diverges as the number of segments increases, since
-    # beta < 1 makes the per-segment sum super-additive).
     inner_term = A ** (1.0 / beta) * (tau ** (alpha / beta)) * dt_arr
     inner_term = np.nan_to_num(inner_term, nan=0.0, posinf=0.0, neginf=0.0)
     inner_cumsum = np.cumsum(inner_term)
 
     pts["HI3_inner_term"] = inner_term
-    # Running HI3 "profile" along the path (monotonic, reaches HI3 total
-    # at the last point) - useful for plotting, not itself additive.
     pts["HI3_percent_cumulative"] = inner_cumsum ** beta
 
     # Backwards-compatible aliases (old column/variable names -> HI2)
@@ -431,34 +369,7 @@ def compute_streamline_hemolysis(nodes, streamline_node_ids,
 
 def compute_streamline_SA(pts):
     """
-    Linear stress-accumulation (SA) model, as used in Marom et al. 2014
-    to build the TAH "thrombogenic footprint" (their Fig. 5).
-
-    Unlike the Giersiepen power law, SA does not raise stress or time to a
-    power - it is just the running sum of (local stress) x (time spent at
-    that stress) along the platelet's path:
-
-        SA_i = sum_k  tau_k * dt_k
-
-    This is a much simpler, purely additive damage model: every bit of
-    stress-time a platelet accumulates counts equally, with no assumption
-    about how stress and duration interact (contrast with Giersiepen's
-    tau^alpha * t^beta coupling). It is typically compared against the
-    Hellums threshold (~35 dyne*s/cm^2) rather than converted to NIH.
-
-    Parameters
-    ----------
-    pts : pd.DataFrame
-        The per-streamline dataframe already built by
-        compute_streamline_hemolysis (must have "shear" and "dt" columns,
-        with shear in Pa and dt in seconds).
-
-    Returns
-    -------
-    pts : the same dataframe, with two new columns:
-        "dSA_dyne_s_cm2"          - incremental SA contributed by each segment
-        "SA_cumulative_dyne_s_cm2" - running cumulative SA along the path
-    SA_total_dyne_s_cm2 : float, total SA accumulated over the whole streamline
+    Linear stress-accumulation (SA) model, as used in Marom et al. 2014.
     """
     tau_pa = pts["shear"].to_numpy()
     dt_arr = pts["dt"].to_numpy()
@@ -474,6 +385,119 @@ def compute_streamline_SA(pts):
     return pts, SA_total_dyne_s_cm2
 
 
+# --- NEW: per-streamline coverage diagnostic ---------------------------------
+def diagnose_streamline_coverage(pts, sid_index=None):
+    """
+    Per-streamline diagnostic: how much of the path was rescued by the
+    velocity floor, and how long the path actually is in time.
+
+    If most streamlines have (a) similar short t_cumulative AND (b) a
+    substantial fraction of floored segments, the problem is upstream:
+    your CFD-Post seeding isn't capturing the slow / stagnation regions,
+    so the hemolysis model is being asked to extrapolate into territory
+    it never sees. No amount of min_vel tuning fixes that - you need to
+    re-seed streamlines (denser near walls, valve hinges, recirculation
+    zones) and re-export.
+
+    Parameters
+    ----------
+    pts : pd.DataFrame
+        Per-streamline dataframe from compute_streamline_hemolysis, must
+        have "seg_vel_floored" (bool) and "t_cumulative" columns.
+    sid_index : int or str, optional
+        Identifier for reporting.
+
+    Returns
+    -------
+    dict with per-streamline stats, or None if the streamline is too short.
+    """
+    n_seg = len(pts)
+    if n_seg < 2:
+        return None
+
+    floored = pts["seg_vel_floored"].to_numpy()
+    # segment 0 has no meaningful velocity (it's the seed point), so
+    # exclude it from the floored fraction
+    floored_segs = floored[1:]
+    frac_floored = float(np.mean(floored_segs)) if len(floored_segs) else 0.0
+
+    t_total = float(pts["t_cumulative"].iloc[-1])
+    t_median_seg = float(np.median(pts["dt"].to_numpy()[1:])) if n_seg > 1 else 0.0
+    t_max_seg = float(np.max(pts["dt"].to_numpy()[1:])) if n_seg > 1 else 0.0
+
+    return {
+        "streamline_id": sid_index,
+        "n_segments": n_seg - 1,
+        "frac_segments_floored": frac_floored,
+        "t_total_s": t_total,
+        "t_median_segment_s": t_median_seg,
+        "t_max_segment_s": t_max_seg,
+        "arc_length_m": float(pts["arc_length"].sum()),
+    }
+
+
+# --- NEW: aggregate coverage report -----------------------------------------
+def _report_coverage(coverage_df):
+    """
+    Prints the aggregate coverage diagnostic.
+
+    Interpretation logic:
+      - frac_segments_floored is small (<~1%) and t_total is well-distributed
+        across streamlines -> the velocity floor is a rare safety net; HI/SA
+        numbers are being driven by real flow data. Fine.
+      - frac_segments_floored is large (>10% on many streamlines) OR t_total
+        is tightly clustered near zero -> the floor is doing real work, and
+        the seed points are not resolving low-velocity regions. The fix is
+        upstream in CFD-Post seeding, not in the hemolysis math.
+    """
+    if coverage_df is None or len(coverage_df) == 0:
+        print("\n[COVERAGE] No streamlines to diagnose.")
+        return
+
+    frac = coverage_df["frac_segments_floored"].to_numpy()
+    t_tot = coverage_df["t_total_s"].to_numpy()
+
+    print("\n" + "=" * 70)
+    print("Streamline coverage diagnostic")
+    print("=" * 70)
+    print(f"  Streamlines analysed:              {len(coverage_df)}")
+    print(f"  Segments floored (all lines):      {frac.mean()*100:6.2f} %  "
+          f"(median per-line: {np.median(frac)*100:.2f} %)")
+    print(f"  Streamlines with >10% floored:     "
+          f"{np.mean(frac > 0.10)*100:6.2f} %")
+    print(f"  Streamlines with >50% floored:     "
+          f"{np.mean(frac > 0.50)*100:6.2f} %")
+    print("-" * 70)
+    print(f"  Total transit time t_total [s]:")
+    print(f"    min / median / max:              "
+          f"{t_tot.min():.4e} / {np.median(t_tot):.4e} / {t_tot.max():.4e}")
+    print(f"    std / mean:                      {t_tot.std():.4e} / {t_tot.mean():.4e}")
+    print(f"    coefficient of variation:        "
+          f"{t_tot.std()/max(t_tot.mean(),1e-12):.3f}")
+    print("-" * 70)
+
+    heavy_floor = np.mean(frac > 0.10) > 0.20
+    tight_time = (t_tot.std() / max(t_tot.mean(), 1e-12)) < 0.25
+
+    if heavy_floor and tight_time:
+        print("  VERDICT: Floor is doing real work AND transit times are")
+        print("           tightly clustered -> you are NOT capturing the")
+        print("           slow/recirculation regions. Fix upstream in")
+        print("           CFD-Post seeding, not in the hemolysis math.")
+    elif heavy_floor:
+        print("  VERDICT: Floor is doing real work on a meaningful fraction")
+        print("           of segments. Some slow regions exist but are")
+        print("           under-resolved. Consider denser seeding there.")
+    elif tight_time:
+        print("  VERDICT: Floor is rarely hit, but transit times are very")
+        print("           uniform - suspicious. Check whether the export")
+        print("           contains more than one distinct path family.")
+    else:
+        print("  VERDICT: Coverage looks healthy - floor is a rare safety")
+        print("           net and transit times span a plausible range.")
+    print("=" * 70)
+
+
 def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
     """
     Full pipeline: parse -> reconstruct -> compute per-streamline hemolysis
@@ -484,7 +508,8 @@ def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
 
     results = []
     per_streamline_dfs = []
-    for sid_list in tqdm(streamline_ids, desc="Hemolysis", unit="line"):
+    coverage_diags = []          # --- NEW
+    for i, sid_list in enumerate(tqdm(streamline_ids, desc="Hemolysis", unit="line")):
         # keep only node ids that actually exist in the parsed data table
         sid_list = [n for n in sid_list if n in nodes.index]
         if len(sid_list) < 2:
@@ -492,11 +517,16 @@ def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
         df, HI2_total, HI3_total = compute_streamline_hemolysis(nodes, sid_list, A, alpha, beta)
         df, SA_total = compute_streamline_SA(df)
         per_streamline_dfs.append(df)
+
+        # --- NEW: collect coverage diagnostic for this streamline
+        diag = diagnose_streamline_coverage(df, sid_index=i)
+        if diag is not None:
+            coverage_diags.append(diag)
+
         results.append({
             "n_points": len(sid_list),
             "HI2_percent": HI2_total,
             "HI3_percent": HI3_total,
-            # Backwards-compatible alias (old column name -> HI2)
             "HI_percent": HI2_total,
             "SA_dyne_s_cm2": SA_total,
             "mean_inlet_velocity": df["vel"].iloc[0],
@@ -507,59 +537,50 @@ def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
     if len(summary) == 0:
         raise RuntimeError("No valid streamlines were reconstructed - check the export file.")
 
-    # Flow-weighted average: weight each streamline by its inlet velocity
-    # (proxy for the flow rate it represents, since inlet sample points are
-    # evenly spaced -> equal area weighting, so velocity approximates flux share)
     weights = summary["mean_inlet_velocity"].to_numpy()
     weights = weights / weights.sum()
     device_HI2_percent = float(np.sum(summary["HI2_percent"].to_numpy() * weights))
     device_HI3_percent = float(np.sum(summary["HI3_percent"].to_numpy() * weights))
-    # Backwards-compatible alias (old name -> HI2)
     device_HI_percent = device_HI2_percent
 
     def _to_nih_mg(hi_percent):
         nih_g = hi_percent * (1 - HCT) * HB  # g/100L (per report eq. 3 units)
         return nih_g * 1000.0  # convert g/100L -> mg/100L for comparison
 
-    device_NIH_mg = _to_nih_mg(device_HI2_percent)          # backwards-compatible alias
+    device_NIH_mg = _to_nih_mg(device_HI2_percent)
     device_HI2_NIH_mg = _to_nih_mg(device_HI2_percent)
     device_HI3_NIH_mg = _to_nih_mg(device_HI3_percent)
 
-    # Device-level SA statistics, mirroring the "thrombogenic footprint"
-    # reported in Marom et al. 2014: the median of the SA distribution
-    # across all streamlines, and the probability mass beyond the Hellums
-    # activation threshold.
     sa_values = summary["SA_dyne_s_cm2"].to_numpy()
     device_SA_median = float(np.median(sa_values))
     device_SA_prob_above_threshold = float(
         np.mean(sa_values > HELLUMS_THRESHOLD_DYNE_S_CM2)
     )
 
+    # --- NEW: aggregate coverage diagnostic + report
+    coverage_df = pd.DataFrame(coverage_diags)
+    _report_coverage(coverage_df)
+
     return {
         "nodes": nodes,
         "streamlines": per_streamline_dfs,
         "summary": summary,
-        # Backwards-compatible aliases (old keys -> HI2, the method previously
-        # implemented here) - kept so existing scripts/plots don't break.
         "device_HI_percent": device_HI_percent,
         "device_NIH_mg_per_100L": device_NIH_mg,
-        # New: explicit HI2 vs HI3 comparison
         "device_HI2_percent": device_HI2_percent,
         "device_HI3_percent": device_HI3_percent,
         "device_HI2_NIH_mg_per_100L": device_HI2_NIH_mg,
         "device_HI3_NIH_mg_per_100L": device_HI3_NIH_mg,
         "device_SA_median_dyne_s_cm2": device_SA_median,
         "device_SA_prob_above_hellums": device_SA_prob_above_threshold,
+        "coverage_diagnostics": coverage_df,   # --- NEW
     }
 
 
 def check_constant_range_coverage(result, constants_name):
     """
     Reports what fraction of streamline data falls outside the tau/t range
-    that a given power-law constant set was actually fit over (Table 1,
-    Taskin et al. 2012). Extrapolating a regression fit outside its support
-    is a second, independent source of error on top of model choice (HI2
-    vs HI3), so this is worth checking before trusting a given constant set.
+    that a given power-law constant set was actually fit over.
     """
     limits = POWER_LAW_CONSTANTS[constants_name]
     all_tau = np.concatenate([df["shear"].to_numpy()[1:] for df in result["streamlines"]])
@@ -577,15 +598,7 @@ def check_constant_range_coverage(result, constants_name):
 
 def run_pipeline_all_constants(filepath, constant_names=("GW", "HO", "TZ")):
     """
-    Runs the full pipeline once per named constant set (see
-    POWER_LAW_CONSTANTS) and prints a compact HI2 vs HI3 vs NIH comparison
-    table across all of them - useful for exactly the "how sensitive am I
-    to which literature constants I use" check.
-
-    Returns
-    -------
-    dict[str, dict] : one full run_pipeline() result per constant set name
-    comparison : pd.DataFrame summarizing device-level results across sets
+    Runs the full pipeline once per named constant set.
     """
     all_results = {}
     rows = []
@@ -627,15 +640,6 @@ def _axis_range(streamline_dfs, col):
 
 def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=None,
                          flat_tolerance=1e-3):
-    """
-    Plots reconstructed streamlines coloured by local shear stress.
-
-    Automatically detects near-planar (2D CFD case) data - where one axis
-    has negligible range compared to the other two - and switches to a
-    clean 2D plot instead of a distorted 3D one. For genuinely 3D data,
-    keeps proper axis proportions (equal aspect box) so the geometry
-    isn't stretched.
-    """
     from matplotlib.collections import LineCollection
     from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
@@ -643,27 +647,19 @@ def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=None,
     y_lo, y_hi, y_range = _axis_range(streamline_dfs, "y")
     z_lo, z_hi, z_range = _axis_range(streamline_dfs, "z")
 
-    # all_shear = np.concatenate([df["shear"].to_numpy() for df in streamline_dfs])
-    # vmin, vmax = np.nanmin(all_shear), np.nanmax(all_shear)
-    # cmap = plt.get_cmap("turbo")
-    # norm = plt.Normalize(vmin=vmin, vmax=vmax)
-
     all_shear = np.concatenate([df["shear"].to_numpy() for df in streamline_dfs])
     from matplotlib.colors import LogNorm
     vmin, vmax = np.nanmin(all_shear), np.nanmax(all_shear)
     cmap = plt.get_cmap("turbo")
-    norm = LogNorm(vmin=vmin, vmax=vmax)  # ← use LogNorm instead of Normalize
+    norm = LogNorm(vmin=vmin, vmax=vmax)
 
     dfs = streamline_dfs if max_lines is None else streamline_dfs[:max_lines]
     in_plane_scale = max(x_range, y_range, 1e-12)
 
-    # A "2D case" is one where the out-of-plane axis barely varies compared
-    # to the other two - e.g. a single-cell-thick CFX slab extrusion.
     is_flat_z = z_range < flat_tolerance * in_plane_scale
     is_flat_y = y_range < flat_tolerance * max(x_range, z_range, 1e-12)
 
     if is_flat_z or is_flat_y:
-        # --- 2D rendering ---
         if is_flat_z:
             xa, ya, xlabel, ylabel = "x", "y", "X [m]", "Y [m]"
         else:
@@ -692,7 +688,6 @@ def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=None,
         cbar.set_label("Local shear stress [Pa]")
 
     else:
-        # --- genuine 3D rendering, with real proportions preserved ---
         fig = plt.figure(figsize=(10, 7))
         ax = fig.add_subplot(111, projection="3d")
 
@@ -707,8 +702,6 @@ def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=None,
         ax.set_xlim(x_lo, x_hi)
         ax.set_ylim(y_lo, y_hi)
         ax.set_zlim(z_lo, z_hi)
-        # Preserve true relative proportions instead of stretching to a cube -
-        # this is what prevents the "distorted box" artifact.
         ax.set_box_aspect((max(x_range, 1e-9), max(y_range, 1e-9), max(z_range, 1e-9)))
 
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
@@ -762,17 +755,12 @@ def plot_hi_histogram(summary, save_path=None):
 
 
 def _gaussian_kde_numpy(data, x_grid):
-    """
-    Minimal Gaussian KDE fallback (Silverman's rule-of-thumb bandwidth),
-    used only if scipy isn't installed. Same idea as scipy.stats.gaussian_kde
-    but dependency-free.
-    """
     data = np.asarray(data, dtype=float)
     n = len(data)
     std = np.std(data, ddof=1) if n > 1 else 1.0
     if std <= 0:
         std = 1.0
-    bandwidth = 1.06 * std * n ** (-1 / 5)  # Silverman's rule of thumb
+    bandwidth = 1.06 * std * n ** (-1 / 5)
     bandwidth = max(bandwidth, 1e-6)
 
     diffs = (x_grid[:, None] - data[None, :]) / bandwidth
@@ -783,48 +771,6 @@ def _gaussian_kde_numpy(data, x_grid):
 
 def plot_sa_pdf(summary, save_path=None, label=None, threshold=HELLUMS_THRESHOLD_DYNE_S_CM2,
                  ax=None, color=None):
-    """
-    Plots the Probability Density Function (PDF) of the stress-accumulation
-    (SA) distribution across all streamlines - the device's "thrombogenic
-    footprint", as in Fig. 5 of Marom et al. 2014.
-
-    Why a PDF (rather than just a mean/median table)?
-    ---------------------------------------------------
-    A single averaged HI% or a single mean shear stress collapses thousands
-    of very different platelet histories into one number, and in doing so
-    hides exactly the thing that causes clot formation: a platelet does not
-    need the *device* to be dangerous on average, it just needs to itself
-    pass through one high-stress, long-residence-time pocket (like the
-    regurgitant jet through a closing valve, described in the paper) to be
-    activated. The PDF shows the full shape of the SA distribution reached
-    by the population of simulated platelets, so:
-      - it reveals the *tail* - the small fraction of trajectories exposed
-        to dangerously high SA - even when the bulk/median is safe,
-      - the area under the curve past a clinical activation threshold
-        (e.g. the Hellums criterion, ~35 dyne*s/cm^2) gives a direct
-        probability of platelet activation, not just a pass/fail on the mean,
-      - it lets you compare devices (e.g. different TAH sizes) by comparing
-        distribution *shapes*, not just single summary statistics - two
-        devices can have the same median SA but very different tails.
-
-    A kernel density estimate (KDE) is used to turn the discrete per-streamline
-    SA values into a smooth PDF, exactly analogous to how Marom et al. built
-    their Fig. 5 from thousands of platelet trajectories.
-
-    Parameters
-    ----------
-    summary : pd.DataFrame or list of pd.DataFrame
-        The `summary` table from run_pipeline (must have "SA_dyne_s_cm2"),
-        or a list of such tables (e.g. one per TAH size) to overlay for
-        comparison.
-    label : str or list of str, optional
-        Legend label(s) for the curve(s).
-    threshold : float
-        Vertical reference line for the platelet-activation threshold.
-    ax : matplotlib Axes, optional
-        Existing axes to plot into (lets you build up a multi-device
-        comparison plot across separate calls).
-    """
     try:
         from scipy.stats import gaussian_kde
         use_scipy = True
@@ -897,18 +843,18 @@ def print_summary(result):
     print(f"Marom et al. medians (ref):   {SA_LITERATURE_MEDIANS}")
     print("=" * 60)
 
-    # After run_pipeline in your main script:
     print("\n=== Streamline Quality Check ===")
     print(f"Total streamlines: {len(result['streamlines'])}")
     print(f"Average points per streamline: {np.mean([len(df) for df in result['streamlines']])}")
     print(f"Min/Max velocity: {result['nodes']['vel'].min():.3f} / {result['nodes']['vel'].max():.3f} m/s")
     print(f"Min/Max shear: {result['nodes']['shear'].min():.1f} / {result['nodes']['shear'].max():.1f} Pa")
 
-    # Check for zero-velocity issues
     zero_vel = result['nodes'][result['nodes']['vel'] < 0.001]
     if len(zero_vel) > 0:
         print(f"WARNING: {len(zero_vel)} nodes with velocity < 0.001 m/s")
         print(f"  These are in regions that might be underestimated")
+
+
 # ---------------------------------------------------------------------------
 # 5. Main
 # ---------------------------------------------------------------------------
@@ -923,8 +869,6 @@ if __name__ == "__main__":
     filepath = sys.argv[1]
 
     if "--compare-constants" in sys.argv:
-        # Sweep GW/HO/TZ constants and print a comparison table; use the
-        # active-default set's result (GW) for the plots/CSV below.
         all_results, comparison = run_pipeline_all_constants(filepath)
         result = all_results[ACTIVE_CONSTANTS]
     else:
@@ -952,6 +896,7 @@ if __name__ == "__main__":
             "histogram":   OUTPUT_DIR / f"hi_histogram_{run_id}.png",
             "sa_pdf":      OUTPUT_DIR / f"sa_pdf_{run_id}.png",
             "summary":     OUTPUT_DIR / f"streamline_summary_{run_id}.csv",
+            "coverage":    OUTPUT_DIR / f"coverage_diagnostics_{run_id}.csv",   # --- NEW
         }
         plot_streamlines_3d(result["streamlines"], save_path=output_paths["streamlines"])
         plot_shear_vs_time(result["streamlines"], save_path=output_paths["shear"])
@@ -959,6 +904,10 @@ if __name__ == "__main__":
         plot_sa_pdf(result["summary"], save_path=output_paths["sa_pdf"], label="This device")
 
         result["summary"].to_csv(output_paths["summary"], index=False)
+        # --- NEW: persist coverage diagnostics
+        if len(result["coverage_diagnostics"]) > 0:
+            result["coverage_diagnostics"].to_csv(output_paths["coverage"], index=False)
+
         print("Saved outputs:")
         for output_path in output_paths.values():
             print(f"  {output_path}")
