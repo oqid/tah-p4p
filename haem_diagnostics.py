@@ -98,9 +98,40 @@ def damage(dt, tau, constants):
     return float(hi2), float(source.sum() ** b), float(exact), source
 
 
-def describe(values):
-    return dict(zip(("min", "p50", "p90", "p95", "p99", "max"),
-                    map(float, np.quantile(values, [0, .5, .9, .95, .99, 1]))))
+def describe(values, weights=None):
+    """Descriptive distribution statistics; std is population, not uncertainty.
+
+    Unweighted quantiles use numpy's linear interpolation. Weighted quantiles
+    use the inverse empirical CDF (first value whose cumulative weight reaches
+    the requested fraction). Zero-weight observations have no contribution.
+    Undefined/nonfinite samples return undefined statistics rather than being
+    silently dropped.
+    """
+    values = np.asarray(values, dtype=float)
+    names = ("min", "p01", "p05", "p25", "p50", "p75", "p90", "p95", "p99", "max")
+    fractions = np.array([0, .01, .05, .25, .5, .75, .9, .95, .99, 1])
+    result = {"count": len(values), "mean": float("nan"), "std": float("nan"),
+              **dict.fromkeys(names, float("nan"))}
+    if weights is not None:
+        weights = np.asarray(weights, dtype=float)
+        if weights.shape != values.shape or not np.isfinite(weights).all() or (weights < 0).any():
+            raise ValueError("Statistics weights must match values and be finite and nonnegative.")
+        positive = weights > 0
+        values, weights = values[positive], weights[positive]
+        result["count"] = len(values)
+    if not len(values) or not np.isfinite(values).all():
+        return result
+    mean = float(np.average(values, weights=weights))
+    result.update(mean=mean, std=float(np.sqrt(np.average((values-mean)**2, weights=weights))))
+    if weights is None:
+        quantiles = np.quantile(values, fractions)
+    else:
+        order = np.argsort(values)
+        cumulative = np.cumsum(weights[order] / weights.sum())
+        indices = np.minimum(np.searchsorted(cumulative, fractions, side="left"), len(values)-1)
+        quantiles = values[order][indices]
+    result.update(zip(names, map(float, quantiles)))
+    return result
 
 
 def weighted(values, weights):
@@ -227,6 +258,31 @@ def analyze(path, config, destination):
     metrics["GW_HI3_all_exported_percent"] = weighted(frame.GW_HI3_percent, frame.weight)
     metrics["SA_selected_median_dyne_s_cm2"] = float(selected.SA_dyne_s_cm2.median())
     report["metrics"] = metrics
+    statistics = []
+    def add_statistics(quantity, unit, population, weighting, values, weights=None):
+        statistics.append({"quantity": quantity, "unit": unit, "population": population,
+                           "weighting": weighting, **describe(values, weights)})
+    add_statistics("scalar_shear_stress", "Pa", "all_exported_nodes", "point_sampled", all_points[:, 3])
+    add_statistics("speed", "m/s", "all_exported_nodes", "point_sampled", all_points[:, 4])
+    add_statistics("transit_time", "s", "all_exported_paths", "equal_path", frame.transit_s)
+    for column, quantity, unit in (
+        ("transit_s", "transit_time", "s"),
+        ("max_stress_Pa", "path_maximum_stress", "Pa"),
+        ("SA_dyne_s_cm2", "stress_accumulation", "dyne*s/cm2"),
+        ("GW_HI2_percent", "GW_HI2", "%"),
+        ("GW_HI3_percent", "GW_HI3", "%"),
+    ):
+        for weighting, weights_for_stats in (("equal_path", None), (report["weighting"], selected.weight)):
+            add_statistics(quantity, unit, report["population"], weighting, selected[column], weights_for_stats)
+    report["distribution_statistics"] = statistics
+    report["statistics_notes"] = [
+        "Speed percentiles describe velocity magnitude, not volumetric flow rate.",
+        "Point-sampled stresses/speeds depend on export sampling; they are not volume- or residence-time-weighted.",
+        "Weighted path statistics use the same supplied flux or inlet-speed proxy as the HI average.",
+        "Unweighted percentiles use linear interpolation; weighted percentiles use the inverse empirical CDF.",
+        "Standard deviation describes distribution spread, not uncertainty in a device prediction; points/paths are not independent experimental replicates.",
+        "Weighted count is the number of positive-weight paths, not an effective sample size."
+    ]
     report["GW_linearized_source_time_quartile_fractions"] = (source_bins/source_bins.sum()).tolist() if source_bins.sum() else None
     bpm = config.get("bpm", 120)
     report["transit_fraction_of_half_cycle_all_paths"] = describe(frame.transit_s / (30/bpm))
@@ -245,6 +301,7 @@ def analyze(path, config, destination):
     report["existing_export_subsample_sensitivity_NOT_convergence"] = subsamples
     destination.mkdir(parents=True, exist_ok=False)
     frame.to_csv(destination / "streamlines.csv", index=False)
+    pd.DataFrame(statistics).to_csv(destination / "statistics.csv", index=False)
     pd.DataFrame(hot).to_csv(destination / "hotspot_segments.csv", index=False)
     write_json(destination / "diagnostics.json", report)
     lines = [f"# {config.get('label', path.stem)}", "", f"Input: {path}",
@@ -252,12 +309,21 @@ def analyze(path, config, destination):
              f"Paths: {n}; selected: {len(selected)}; selected/exported weight: {report['selected_weight_fraction_of_exported']:.6f}",
              "", "## Metrics", ""]
     lines.extend(f"- {key}: {value:.8g}" for key, value in metrics.items())
+    lines.extend(["", "## Distribution statistics", "",
+                  "| Quantity (unit) | Population / weighting | Mean | Std | P50 | P90 | P95 | P99 | Max |",
+                  "|---|---|---:|---:|---:|---:|---:|---:|---:|"])
+    for stat in statistics:
+        values = " | ".join(f"{stat[key]:.6g}" for key in ("mean", "std", "p50", "p90", "p95", "p99", "max"))
+        lines.append(f"| {stat['quantity']} ({stat['unit']}) | {stat['population']} / {stat['weighting']} | {values} |")
+    lines.extend([""] + [f"- {note}" for note in report["statistics_notes"]])
     lines.extend(["", "## Interpretation limits", ""] + [f"- {w}" for w in warnings])
     (destination / "report.md").write_text("\n".join(lines), encoding="utf-8")
     return {"label": config.get("label", path.stem), "input": str(path),
             "population": report["population"], "weighting": report["weighting"],
             "n_streamlines": n, "coverage_of_exported_weight": report["selected_weight_fraction_of_exported"],
-            **{k: config.get(k) for k in ("size_cc", "phase", "geometry", "mesh_cells", "flow_L_min")}, **metrics}
+            **{k: config.get(k) for k in ("size_cc", "phase", "geometry", "mesh_cells", "flow_L_min")}, **metrics,
+            **{f"stats_{s['quantity']}_{s['population']}_{s['weighting']}_{key}": s[key]
+               for s in statistics for key in ("mean", "std", "p50", "p95", "p99", "max")}}
 
 
 def write_json(path, value):

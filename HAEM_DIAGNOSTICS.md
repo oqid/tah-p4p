@@ -68,6 +68,13 @@ Use different planes per case if scaling changes outlet position/orientation.
 
 - `comparison.csv`: case metadata, selected-population HI/NIH, sensitivity results.
 - Per-case `report.md`: principal values and interpretation limits.
+- Per-case `statistics.csv`: mean, population standard deviation, min/max and
+  P01/P05/P25/P50/P75/P90/P95/P99. Includes point-sampled speed and stress, all-path
+  transit times, and selected-path transit, maximum stress, SA and GW HI2/HI3.
+  Selected-path distributions are reported both equally weighted and with the
+  supplied flux weights (or explicitly labelled inlet-speed proxy). The readable
+  report shows the principal percentiles; comparison.csv includes mean, std,
+  P50/P95/P99/max columns for comparing cases.
 - `diagnostics.json`: input SHA256, settings, percentiles, timing, fit-range flags,
   source distribution and deterministic subsampling results. Undefined results
   are JSON null, not zero.
@@ -110,7 +117,15 @@ Numerical variants:
   independent numerical solutions.
 
 Point stress percentiles are not volume-weighted. Transit and SA percentiles are
-unweighted over paths. Fit stress flags use per-path residence-time fractions,
+unweighted in the original summary fields; the new distribution tables label
+both equal-path and weighted versions explicitly. Speed is velocity magnitude,
+not volumetric flow rate, which cannot be inferred from these scalar streamline
+exports alone. Unweighted percentiles use linear interpolation; weighted ones
+use the inverse empirical CDF. Std describes population spread, not confidence
+in a prediction. P95/P99 of stress and damage help identify high-exposure tails,
+but their stability must be checked across independent export refinements.
+Do not treat streamline samples as independent experimental replicates for
+significance tests. Fit stress flags use per-path residence-time fractions,
 then the selected path weights; total transit exceeding a calibration duration
 is only a screening flag for variable stress. TZ explicitly checks its 50 Pa
 lower calibration bound; no undocumented GW/HO lower bound is assumed.

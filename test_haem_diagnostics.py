@@ -10,6 +10,21 @@ import haem_diagnostics as audit
 
 
 class DiagnosticsTests(unittest.TestCase):
+    def test_distribution_statistics(self):
+        summary = audit.describe([1., 2., 3., 4.])
+        self.assertEqual(summary["p50"], 2.5)
+        self.assertAlmostEqual(summary["p95"], 3.85)
+        self.assertAlmostEqual(summary["std"], np.sqrt(1.25))
+        weighted = audit.describe([100., 1., 3.], [0., 1., 3.])
+        self.assertEqual(weighted["count"], 2)
+        self.assertEqual(weighted["mean"], 2.5)
+        self.assertEqual(weighted["p50"], 3.)
+        self.assertEqual(weighted["max"], 3.)
+        self.assertTrue(np.isnan(audit.describe([], [])["p99"]))
+        self.assertTrue(np.isnan(audit.describe([1., np.nan])["p99"]))
+        with self.assertRaises(ValueError):
+            audit.describe([1., 2.], [1., -1.])
+
     def export(self, root, three_d=False):
         path = root / "fixture.csv"
         z = .002 if three_d else 0
@@ -41,6 +56,10 @@ class DiagnosticsTests(unittest.TestCase):
                 self.assertAlmostEqual(result["GW_HI3_percent"], expected)
                 report = json.loads((root / "out/diagnostics.json").read_text())
                 self.assertEqual(report["missing_seed_count"], 1)
+                distributions = report["distribution_statistics"]
+                hi3 = next(s for s in distributions if s["quantity"] == "GW_HI3" and s["weighting"] == "supplied_flux")
+                self.assertAlmostEqual(hi3["mean"], result["GW_HI3_percent"])
+                self.assertEqual(hi3["count"], 1)
 
     def test_no_completed_paths_are_undefined(self):
         with tempfile.TemporaryDirectory() as temp:
