@@ -1,0 +1,920 @@
+PAGE 1
+363
+ASAIO Journal 2012
+Hemolysis caused by flow-induced mechanical damage to 
+red blood cells is still a problem in medical devices such 
+as ventricular assist devices (VADs), artificial lungs, and 
+mechanical heart valves. A number of different models have 
+been proposed by different research groups for calculating 
+the hemolysis, and of these, the power law–based models 
+(HI(%)Ctατ β) have proved the most popular because of 
+their ease of use and applicability to a wide range of devices. 
+However, within this power law category of models there 
+are a number of different implementations. The aim of this 
+work was to evaluate different power law–based models by 
+calculating hemolysis in a specifically designed shearing 
+device and a clinical VAD, and comparing the estimated 
+results with experimental measurements of the hemolysis in 
+these two devices. Both the Eulerian scalar transport and all 
+the Lagrangian models had fairly large percentage of errors 
+compared with the experiments (minimum Eulerian 91% 
+and minimum Lagrangian 57%) showing they could not 
+accurately predict the magnitude of the hemolysis. How -
+ever, the Eulerian approach had large correlation coeffi -
+cients (>0.99) showing that this method can predict relative 
+hemolysis, which would be useful in comparative analysis, 
+for example, for ranking different devices or for design opti -
+mization studies. ASAIO Journal 2012; 58:363–372.
+Damage to the red blood cell (RBC) with resulting release 
+of hemoglobin into the blood plasma is known as hemolysis. 
+This blood cell trauma manifests as morphologic changes, 
+shortened life span, biochemical functional alterations, 
+and complete rupture. Mechanical shear stress is known to 
+cause hemolysis either by exerting sufficient stress to com -
+pletely rupture the RBC membrane or through formation of 
+pores in the RBC membrane when the stress/strain exceeds 
+a critical value. In addition to the magnitude of the shear 
+stress, hemolysis is also increased by increasing duration of 
+the RBC’s exposure to shear stress. 1–3 Shear stress below a 
+critical level results in either elastic reversible elongation of 
+the cells, if applied for a short time, or nonreversible shape 
+change with longer application. The former conditions do 
+not create hemolysis. However, the latter one may yield 
+hemoglobin leakage into the blood plasma. 4
+Two major types of models for hemolysis have been proposed: 
+strain-based models5–7 and power law models. Strain-based mod-
+els aim to model the deformation of the RBCs and corresponding 
+strain of the cell membrane and calculate the subsequent hemo-
+globin released, a bottom up approach. In contrast, power law 
+models are derived from the empirical observation that under 
+constant uniform shear stress the increase in plasma free hemo-
+globin, ∆Hb, is a power law function of shear stress and exposure 
+time, a top down approach. Power law models have been the 
+most popular, probably because of their ease of implementation 
+and apparent broad applicability. The first power law model was 
+developed by Giersiepen et al.,8 for use in calculating the hemo-
+lysis index (HI), due to mechanical heart valves, and was based 
+on in vitro hemolysis data obtained from a Couette shearing 
+device in which human RBC suspension was exposed to shear 
+stresses, , (<255 Pa), for exposure times, t (<700 msec):
+ HI(%) =⋅ =/H9004Hb
+Hb Ct100 /H9251/H9252/H9270 (1)
+The constants C, , and  were determined by regression 
+of the experimental data. Heuser and Opitz 9 used the same 
+shearing device with porcine blood, shorter exposure times  
+(t < 700 msec), and higher shear stresses ( < 700 Pa).
+With the aim of developing a more widely applicable power 
+law equation Zhang et al.10 recently conducted uniform shear 
+stress experiments using novel shearing devices. Ovine blood 
+was exposed to uniform shear stresses (50–320 Pa) for a range 
+of exposure times (<1.5 sec), and the results were fit to Equa -
+tion 1. The resulting empirical constants are given in Table 1 
+(Zhang et al. constants [TZ]), along with those of  Giersiepen 
+(GW) et al. and Heuser et al. (HO).
+Over the last decade there have been persistent attempts 
+to use computational fluid dynamics (CFD) for predicting 
+hemolysis.11 In general, there are two types of computational 
+methods available: Eulerian and Lagrangian approaches. In the 
+Eulerian approach, the damage index is integrated over the 
+entire computational flow domain whereas in the Lagrangian 
+formulation the integration is along the flow path lines.
+The Eulerian approach has been used to calculate the blood 
+damage potential of ventricular assist devices (VADs) by  
+several research groups.12–14 Hb can be defined as a scalar 
+Biomedical Engineering
+Evaluation of Eulerian and Lagrangian Models for  
+Hemolysis Estimation
+M. ERTAN TASKIN, KATHARINE H. FRASER, TAO ZHANG, CHANGFU WU, BARTLEY P. GRIFFITH, AND ZHONGJUN J. WU
+From the Artificial Organs Laboratory, Department of Surgery, 
+ University of Maryland School of Medicine, Baltimore, Maryland.
+Current Address: M. Ertan Taskin, HeartWare Inc., 14000 NW 57th 
+Court, Miami Lakes, FL 33014.
+Submitted for consideration July 2011; accepted for publication in 
+revised form January 2012.
+Disclosures: This work was funded by the NIH (Grant number: 
+5R01HL088100).
+Reprint Requests: Zhongjun J Wu, PhD, Department of Surgery, 
+ University of Maryland School of Medicine, MSTF-436, 10. S. Pine 
+Street, Baltimore, MD 21201. Email: zwu@smail.umaryland.edu.
+Copyright © 2012 by the American Society for Artificial Internal 
+Organs
+DOI: 10.1097/MAT.0b013e318254833b 
+PAGE 2
+364 TASKIN ET AL.
+variable that is equal to Hb1/15 (similar to the method used  
+by Fill et al.).16 The scalar transport equation is then expressed 
+as:
+ 
+dH b
+dt Hb S(’ ) (’ )/H9004 /H9004+⋅ ∇=vr  (2)
+where S is the source term and defined as SH b=⋅ ⋅()rt C /H9252/H92511/
+. 
+It is possible to use other source terms for plasma free hemoglo-
+bin17 although these have never been applied in practice.
+The Lagrangian approach encompasses the ability to calcu -
+late the shear stress history on the RBC, which enables the mod-
+eling of prior damage. In the Lagrangian approach, path lines 
+are traced from the inlet of a device to the outlet. Although the 
+number of path lines cannot possibly reproduce the number of 
+actual paths taken, these path lines are assumed to be typical 
+paths that are representative of all the paths. Several damage 
+accumulation models have been proposed. These all use the 
+assumption that, although the shear stress varies throughout a 
+medical device, over a short enough time the shear stress can be 
+considered uniform and therefore hemolysis for this time interval 
+can be calculated based on Equation 1. The hemolysis for each 
+time interval can then be integrated along each path line and 
+the average of the hemolysis at the outlet for all the path lines 
+is then found. Several groups18–20 considered the hemolysis for 
+the short time interval to be given by Equation 1 and therefore  
+the total hemolysis along a path line from the inlet of a device  
+to the outlet was found by integrating equation 1:
+ HI dt t1 =⋅ ⋅= ⋅⋅∫ ∑CC
+inlet
+outlet
+inlet
+outlet
+exp exp
+/H9251/H9252 /H9251/H9252tt /H9004 (3)
+As noted by Grigioni et al.21 this equation fails to estimate 
+the uniform shear stress hemolysis as it does not reproduce the 
+total hemolysis given by Equation 1.
+Several other groups 22–24 calculated the accumulated dam -
+age by integrating the temporal derivative of Equation 1:
+ HI tt2 =⋅ ⋅⋅ ⋅−
+∑ /H9251/H9251/H9252C
+inlet
+outlet
+exp exp
+1 t /H9004 (4)
+HI2 integrates to give Equation 1 for a uniform shear stress 
+field but does not incorporate the damage history.
+Based on work by Garon and Farinas,12 another damage accu-
+mulation method based on summing the linearized damage is:
+ HI t3 =
+
+
+
+
+
+∑C
+inlet
+outlet
+/H9004t/H9252/H9251
+/H9251
+ (5)
+Recently, Grigioni et al .21 proposed a procedure in which 
+they defined a mechanical dose D as:
+ Dt=⋅ exp
+/t/H9252/H9251 (6)
+The time derivative of D was taken, and the damage accu -
+mulation was expressed as:
+ HI tt Dt tjj
+j
+i
+i4 0
+1
+1
+=⋅ ⋅⋅ +
+
+
+
+
+
+
+⋅
+=
+−
+∑/H9251 /H9252/H9251
+/H9251
+/H9252/H9251C
+inlet
+tt() () ()// /H9004
+ooutlet
+∑ ⋅/H9004ti  (7)
+The term in the square brackets represents the whole 
+mechanical dose acting on the cell moving along the path line 
+from the starting observation time until the ith instant, whereas 
+t() /ttii
+/H9252/H9251× /H9004 is the elementary mechanical dose sustained by 
+the red cell in the ith interval. Like Equation 4, this equation 
+reproduces Equation 1 for uniform shear stress; however, it 
+also addresses the shear time–varying history sensed by the 
+RBCs, which could not be achieved with Equations 3 and 4.
+Similarly, another approach that takes into account the time-
+dependent shear loading history was proposed by Goubergrits 
+and Affeld.25 They assumed that the blood damage contribu -
+tion from a time instant was a function of the blood damage at 
+that time but was independent of how the existing blood dam-
+age arose. They define an effective time, teff, as a virtual time 
+step, and calculate HI accordingly as:
+ HI tt tt tteff5C() += ⋅+() ⋅+()/H9004/H9004 /H9004
+/H9251 /H9252
+t  (8)
+where teff is calculated as:
+ t HI t
+tt
+eff = ⋅+
+
+
+
+
+
+
+5()
+()
+/
+C t /H9004/H9252
+/H92511
+ (9)
+Although hemolysis has been extensively studied both exper-
+imentally and computationally, there is still a debate on deter-
+mining the most appropriate and universal modeling approach. 
+Furthermore, there is less evidence of experimentally verified 
+computational models. In this article, the HI predictions of five 
+Lagrangian approaches (HI1, HI2, HI3, HI4, and HI5) and the 
+Eulerian method with scalar transport (E), were evaluated and 
+compared with measurements in two physical devices. The HI 
+calculations were performed considering three different sets of 
+constants for the power law equation as given in Table 1. The 
+computational evaluation was carried out in an axial shearing 
+device, which has a uniform shear region in the narrowest gap 
+between the rotating spindle and the outer housing surfaces. 
+This satisfies the experimental conditions of Equation 1. The 
+evaluation was further extended to a clinical VAD in which 
+there are complex ﬂow and shear fields.
+Materials and Methods
+Blood Shearing Device
+Blood Shearing Device (Hemolyzer-H). The blood shearing 
+device10 for high-shear stress and short exposure time condi -
+tions (named “Hemolyzer-H”) was custom designed based on 
+a modification of the Jarvik 2000 blood pump. It consists of 
+a rotating rotor spindle, instead of the impeller with blades, 
+Table 1. Power Law Equation Constants and Their  
+Covering Ranges
+Model
+Range
+C  
+Shear 
+Stress (Pa)
+Exposure 
+Time (msec)
+GW <255 <700 3.620  10−5 0.7850 2.4160
+HO <700 <700 1.800  10−6 0.7650 1.9910
+TZ 50–320 <1500 1.228  10−5 0.6606 1.9918
+GW, Giersiepen et al. constants8; HO, Heuser et al. constants9;  
+TZ, Zhang et al. constants10; C,  and , constants of the power 
+law equation.
+PAGE 3
+ HEMOLySIS ESTIMATION WITH POWER LAW MODELS 365
+and housing without the diffuser. The computational model of 
+the device consists of the spindle and the outer housing only 
+(Figure 1A). The smallest gap between the rotor middle surface 
+and outer housing is 0.1 mm. When the spindle is rotated, a 
+uniform high-shear stress region is generated in this gap.
+CentriMag Blood Pump . The CentriMag blood pump is an 
+extracorporeal circulatory support device providing hemody -
+namic stabilization in patients in need of circulatory support. 
+It has a magnetically levitated centrifugal pump impeller and 
+has been used clinically worldwide. 14 The computational 
+model of the CentriMag blood pump consists of the inlet, the 
+impeller, the outlet, and the outer casing wall ( Figure 2A ).  
+There is a gap separating the rotor of the impeller and the 
+housing wall.
+Meshing
+The 3D geometry of the Hemolyzer-H and the CentriMag 
+blood pump were generated using the 3D computer-aided 
+design software package SolidWorks v2007 (SolidWorks 
+Corporation, Concord, MA). The geometries in Parasolid for -
+mat were imported into the grid-generation software Gambit 
+v.2.3.16 (Ansys Fluent Inc., Lebanon, NH). The ﬂow domain 
+of the Hemolyzer-H was meshed using 2.7 million hexahedral 
+elements.
+The axial position of the magnetically levitated impeller 
+within the CentriMag pump is determined by the balance 
+between magnetic and lift forces. This position was measured 
+experimentally for each operating condition, and separate 
+meshes were created for each condition. Each mesh used the 
+same controlled hybrid (hexahedral and tetrahedral) structure 
+(Figure 2). Hexahedral cells were used for the inlet and outlet, 
+core, and gap regions. The rest of the geometry was meshed 
+with uniform size (3 mm) tetrahedral elements. The overall size 
+of the model was 3 million cells.
+Flow Calculations
+The computational domain of the Hemolyzer-H is com -
+posed of the ﬂuid, spindle surface, and the inner surface of 
+the outer housing. No-slip boundary conditions were applied 
+at the walls: rotational speed was specified for the spindle and 
+zero velocity for the outer wall. Uniform velocity inlet and 
+outﬂow outlet conditions were used and the inlet and outlet 
+were extended so the solution was not constrained by these 
+boundary conditions. Reynolds number (Re) was 20–220 at 
+the inlet and 85 in the gap; therefore, laminar solutions were 
+calculated.
+The computational domain of the CentriMag blood pump 
+is composed of ﬂuid, the impeller/rotor surface, and the inner 
+surface of the outer housing. The ﬂuid domain was divided into 
+two sections: rotating ﬂuid and stationary outer ﬂuid. The rota-
+tional motion of the impeller/rotor section was defined with 
+the multiple reference frame (MRF), which is a steady-state 
+approximation of the rotational motion. No-slip boundary 
+conditions were applied at the walls, uniform velocity at the 
+inlet, and uniform pressure at the outlet. Re at the inlet was 
+2100–5000, and therefore turbulent solutions were simulated. 
+The SST-k turbulence model was used as it has been found 
+to give good predictions of the pressure head in a similar cen-
+trifugal pump.15
+The commercial finite-volume CFD solver Fluent (Fluent 
+v6.3.26, Ansys Fluent Inc., Lebanon, NH) was used to solve the 
+ﬂow field. The semi-implicit method for pressure-linked equa-
+tions pressure-velocity coupling algorithm was used, and all 
+equations were discretized with second order accuracy. Flow 
+convergence was monitored with the pressure head values as 
+Figure 1. A: Flow domain and dimensions of Hemolyzer-H, and ( B) sample mesh structure. D 1, tube diameter; a, gap thickness; b, gap 
+length; c, length of pre- or postgap region.
+
+PAGE 4
+366 TASKIN ET AL.
+well as the continuity and momentum residuals and mass bal-
+ance. For convergence, the pressure head values were stabi -
+lized, the velocity residuals were below 2  10−3, and the mass 
+balance errors were always <3  10−4% of the total mass ﬂow 
+rate. Blood was treated as an incompressible Newtonian ﬂuid 
+in our analyses. Although it is well known that blood exhibits 
+non-Newtonian ﬂuid behavior under low shear rate, it is rea -
+sonable to use the Newtonian assumption because shear rates 
+in typical rotary blood pumps are relative high (>100 s−1).26
+The 3D shear stress tensor was derived from the velocity 
+field, and a user-defined code was used to calculate the scalar 
+shear stress26 from the stress tensor components:
+ tt tt=− () +
+
+
+
+
+∑∑
+1
+6
+2 2
+1
+2
+ii jj ij  (10)
+Reynolds shear stresses were not included in the analyses 
+because it has been shown that including them creates numeri-
+cally elevated shear fields. 27,28
+Hemolysis Calculations
+The Eulerian hemolysis model was programmed and com -
+piled into the CFD solver using user-defined functions and 
+user-defined scalars (UDS). Once the ﬂow solution was 
+obtained, the scalar transport equation was solved. Conver -
+gence was monitored by the UDS residuals (<10 −7) and sta -
+bilized predictions at the exit of the device. The HI values for 
+each computational cell were calculated by postprocessing 
+the data with a separate user-defined code. To obtain the final 
+HI, the mass-weighted average of the values at the exit of the 
+device was calculated.
+For the Lagrangian models, the path lines were obtained by 
+postprocessing the ﬂow solutions. Parameters for calculating 
+the path lines were chosen so as to get as many path lines to 
+reach the exit as possible. There were between 68 and 1974 
+path lines for the Hemolyzer-H and between 1165 and 1456 
+for the CentriMag blood pump. The HI calculations used Mat-
+lab (Matlab 6.5.1, The MathWorks Inc. Natick, MA). All the 
+computations were carried out on a PC workstation with two 
+Intel Xeon quad-core 2.66GHz CPUs and 16.0 GB RAM with 
+Windows XP 64 bit operating system.
+Experiments
+Plasma hemoglobin was measured after a single passage 
+through the Hemolyzer-H. The experiments were performed in 
+the same way as those described in detail previously. 10 Mea-
+surements of plasma hemoglobin in the CentriMag blood pump 
+were carried out over a 3 hour period using a recirculating ﬂow 
+loop according to the recommended practice for assessment of 
+hemolysis in continuous ﬂow pumps specified by the Ameri -
+can Society of Testing and Materials (ASTM F1841-97). 29 The 
+following equation was used to find the single-pass HI from the 
+change in plasma free hemoglobin over multiple passes:
+ HI
+HbHb
+QT
+V
+(%) =⋅
+/H9004
+100  (11)
+where Q is the ﬂow rate in the recirculating loop, T is the 
+time the blood has been circulating, and V is the volume of 
+blood in the loop.
+Results
+Hemolyzer-H Model
+Mesh refinement . The mesh refinement study was per -
+formed with four different meshes of the Hemolyzer-H model, 
+with a refinement ratio of two ( Table 2 ). Convergence in  
+the pressure drop with increasing mesh density was clear  
+(Figure 3A). Meshes were evaluated according to the quanti -
+fication of uncertainty principles outlined by Roache. 30,31 The 
+order of convergence was calculated:
+ 
+p r
+coarse medium
+medium fine
+r
+=
+−
+−
+
+
+
+
+
+log
+log( )
+/H9278/H9278
+/H9278/H9278  (12)
+where coarse, medium, and fine are the values of the param -
+eter  obtained using coarse, medium, and fine meshes, 
+respectively, and rr is the refinement ratio (two in our case). 
+ was the area-weighted average of the local shear stresses 
+on the spindle. Meshes one, two, and three were used for 
+the fine, medium, and coarse meshes, respectively. p was 
+calculated as 0.95, showing that the convergence was 
+around first order accurate. The following error estimates 
+were used to calculate the mean percentage errors for each 
+mesh (Figure 3B) :
+ E rfine
+medium fine
+medium
+r
+p=
+−
+−
+/H9278/H9278
+/H9278
+1
+ (13)
+ E rmedium
+coarse medium
+coarse
+r
+p=
+−
+−
+/H9278/H9278
+/H9278
+1
+ (14)
+ E
+r
+rcoarse
+r
+p corase medium
+coarse
+r
+p=
+−
+−
+/H9278/H9278
+/H9278
+1
+ (15)
+Mesh two was selected for the study, as the error was accept-
+able (5%), and the mesh size was manageable (<3 million 
+cells).
+Figure 2. A: Model of the CentriMag blood pump, and ( B) mesh 
+structure. D2, tube diameter.
+PAGE 5
+ HEMOLySIS ESTIMATION WITH POWER LAW MODELS 367
+Shear stress field. The uniformity of the shear stress field in 
+the gap region of the Hemolyzer-H was assessed by examining 
+shear stress as contour plots and along path lines ( Figure 4). 
+The CFD-predicted mean scalar shear stress in the gap region 
+varied between 203 and 208 Pa, as the ﬂow rate was increased 
+from 10 to 100 ml/min, which is in good agreement with the 
+analytical value (198 Pa), calculated using the rotational speed, 
+radius of the spindle at the gap region, ﬂuid viscosity, and the 
+thickness of the gap ( tm=⋅ ⋅/H9275ra / ). At 400 ml/min the CFD-
+estimated mean scalar shear stress was 264 Pa. The difference 
+between computational and analytical values is caused by the 
+axial component of velocity, which creates a parabolic pro -
+file imposed on the larger linear profile and results in slightly 
+higher shear stresses at the walls.
+Small regions of high-shear stress were found upstream and 
+downstream of the gap. The shear stress in these spots is sig -
+nificantly higher than the shear stress in the gap (up to 338 
+Pa). However, as their volumes are localized and extremely 
+small, their effect on the total blood damage is assumed to be 
+small. Shear stress along the path lines (Figure 4B and C)  is 
+higher inside the gap region than upstream or downstream; 
+however, there are spikes in the shear stress plots in the 
+upstream and downstream regions because of the presence 
+of the high-shear spots. At 100 ml/min the path lines spent 
+an average 1.3 msec within these high-shear spots compared 
+with 17.6 msec in the gap.
+HI Predictions. The HI predictions (Figures 5 and 6) from six 
+different calculation approaches (five Lagrangian and the Eul -
+erian) each with three sets of power law constants, along with 
+the experimental results, are presented in Figure 6 for vary -
+ing ﬂow rate conditions at a constant rotational speed of 8000 
+rpm. The calculations with GW constants overestimated for 
+every HI calculation method, but were closest with HI2 (mean 
+absolute error compared with experiments 0.24%, percentage 
+error 1360%) compared with experimental values. Note that 
+many predictions exceeded the scale of the graph. With HO 
+constants, the predictions with the Eulerian, HI3, HI4, and HI5 
+methods all underestimated the experimental results whereas 
+the HI1 approach slightly overestimated the results. With TZ 
+constants HI2 predictions were closest but underestimated 
+the experimental results (mean absolute error compared with 
+experiment is 0.013%, percentage error 54%); whereas Eule -
+rian, HI3, HI4, and HI5 methods overestimated the results.
+CentriMag Blood Pump Model
+The HI calculation approaches were further evaluated in 
+the CentriMag centrifugal blood pump . Figure 7 shows path 
+lines through the CentriMag pump and variation in shear 
+stress with exposure time along two sample path lines under 
+the operating condition of 4000 rpm and 5 L/min. The non -
+uniform shear stress along the path lines is clear. Figure 8   
+shows HI contours using the Eulerian model on vertical 
+and horizontal cross-sectional slices through the CentriMag 
+pump at a ﬂow rate of 5 L/min and rotational speeds of 3000 
+and 5000 rpm. The increase in the rotational speed from 
+3000 to 5000 rpm caused a large increase in HI. A vector 
+plot of an enlarged region at 5000 rpm shows the complex -
+ity of the ﬂow field and how regions of high HI can develop. 
+The HI predictions were compared with measurements at 
+varied ﬂow rates (3–7 L/min) with a rotational speed of 4000 
+Table 2. Mesh Details of the Hemolyzer-H Models
+Mesh
+Size 
+(Million 
+Cells)
+Number of Nodes
+Refinement 
+Factora b c
+1 21.66 40 200 80 2
+2 2.71 20 100 40 2
+3 0.35 10 50 20 2
+a, gap thickness; b, gap length; c, length of pre- or postgap region.
+Figure 3.  Hemolyzer-H model mesh refinement and path line 
+dependence results. A: Pressure drop predictions. The pressure 
+drops are the difference between pressure at the inlet and the outlet. 
+The percentages shown on top of each bar are the deviations from 
+the finest model (Model-1) predictions. Details of the meshes are 
+given in Table 2. B: Standardized percentage error compared with 
+the estimated continuum case. C: Variation in HI estimation with 
+number of path lines. Note that for clarity, results are only shown 
+for two accumulation methods for each set of power law constants. 
+However, all five accumulation methods showed very similar varia -
+tions. D: Variation in HI with size of time step. Results are normal -
+ized to the value used for the rest of the analysis, which had mean = 
+0.57 msec. HI, hemolysis index.
+PAGE 6
+368 TASKIN ET AL.
+rpm ( Figure 9A ), and for varied rotational speeds (3000–
+5000 rpm) at a ﬂow rate of 5 L/min (Figure 9B) . Using TZ 
+constants the HI2 method gave predictions closest to experi -
+ments (mean absolute error 0.00034% and percentage error 
+116%). The mean absolute error with the Eulerian method 
+was 0.0074% (percentage error 2279%). The closest with 
+HO constants were HI3, HI4, and HI5 (mean absolute errors 
+0.00018%, 0.00020%, and 0.00020%, percentage errors 
+40%, 43%, and 42%) and Eulerian (mean absolute error 
+0.00026% and percentage error 101%).
+Discussion
+Reliable prediction of hemolysis is a key step to designing 
+more biocompatible blood-contacting devices. In this work, 
+we compared one Eulerian approach and five Lagrang -
+ian approaches for CFD-based prediction of hemolysis in 
+blood-contacting devices. We also compared the impact of 
+three different sets of power law constants reported in the 
+literature. The numerical predictions were compared against 
+experimental measurements conducted on a custom-made 
+blood shearing device with a uniform high-shear stress field, 
+and a clinical VAD with a complex shear stress field. The 
+mesh convergence studies and comparison of the pressure 
+differences across the two devices showed that the calcula -
+tions were satisfactory for the analysis presented given the 
+limitations that are outlined in the ensuing sections. The 
+mean error, mean percentage error, and correlation coef -
+ficient for each model and the combined data from both 
+devices, are given in Table 3.
+Eulerian Calculations
+The Eulerian method for calculating hemolysis has an 
+advantage over the Lagrangian methods because unlike 
+the Lagrangian methods, which rely on seeded path lines 
+to sample the ﬂow, the whole ﬂuid domain is included in 
+the calculation. For the Hemolyzer-H device, the HI con -
+tours obtained at different ﬂow rate conditions, with the TZ 
+constants, are shown on the cross-sectional view planes in 
+Figure 5.
+The CentriMag HI contours, obtained for 3000 and 5000 
+rpm rotational speeds at 5 L/min ﬂow rate, are shown in 
+ Figure 8. Again only the calculations with the TZ constants 
+are presented. The highest concentration of plasma hemo -
+globin is around the rotor surface and at the bottom of the 
+device, which is a result of the secondary ﬂow path. Elevated 
+hemoglobin concentration is also seen close to the inclined 
+top outer housing wall, which is caused by a recirculation 
+zone there (Figure 8, vector plot).
+The differences between the HI values predicted by the Eule-
+rian method and the experimental values for the CentriMag 
+Figure 4. A: Illustrative path lines in Hemolyzer-H, and enlargement showing scalar shear stress contours in the gap region. Shear stress 
+versus exposure time variations along sample path lines for the rotational speed of 8000 rpm and the flow rates of ( B) 20 ml/min, and ( C) 
+50 ml/min. The gap exposure times at these conditions are 33.8 msec and 13.5 msec, respectively. Note that the path line plots only show 
+portions of the entire flow time.
+Figure 5. Hemolysis index (HI) contours using the Eulerian model 
+on a cross-section through the Hemolyzer-H with an enlargement of 
+the gap region. The rotational speed was 8000 rpm, and constants 
+were TZ. TZ, Zhang et al. constants.
+PAGE 7
+ HEMOLySIS ESTIMATION WITH POWER LAW MODELS 369
+blood pump is higher than that for the Hemolyzer-H. This could 
+be because of the complicated ﬂow in the CentriMag blood 
+pump with back ﬂow and secondary ﬂow paths. This complex-
+ity is a large deviation from the uniform shear stress conditions 
+in the experiments used to obtain all sets of constants.
+Lagrangian Calculations
+The Lagrangian path lines were obtained by releasing 
+pseudoparticles from the inlet surface of the correspond -
+ing device. The HI accumulations were calculated along the 
+particle trajectories or path lines to the exit of the device. 
+The number of path lines varied with the device and operat -
+ing condition. The Hemolyzer-H with a ﬂow rate of 20 ml/
+min used the fewest path lines, 68. To check whether this 
+was enough, we performed all the same HI calculations with 
+half of these path lines and found percentage differences, 
+as compared with the original HI predictions, of between 
+0.8 and 3.2%. Also, the variation in the calculated HI in the 
+Hemolyzer-H with number of path lines was assessed up to 
+104 paths for one operating condition ( Figure 3C ), and the 
+calculations were found to be independent of the number of 
+path lines above 20 for this relatively simple device. How -
+ever, a similar analysis on the CentriMag, with path lines up 
+to the original number used, showed that at least 500 were 
+required.
+As stated by Grigioni21,32 integrating a mini power law does 
+not reproduce the uniform shear stress results, and therefore 
+HI1 was not expected to produce accurate HI predictions. In 
+fact, the HI1 results with HO constants have small errors and 
+fairly large correlation coefficients (>0.95). However, results 
+for the HI1 depended on the size of the time steps that the path 
+line was divided into (Figure 3D), whereas the other Lagrang-
+ian methods were independent of the time step. Had a dif -
+ferent time step been used for the analysis with the HI1, the 
+results would be different.
+The calculated HI values with the HI3 accumulation 
+method using HO constants provided the smallest relative 
+error (57%). However, on average, the HI2 accumulation 
+method had the smallest relative error compared with the 
+experimental values (as compared with the averages of the 
+other methods), but had the smallest correlation coefficients 
+between the predicted results and experimental values with 
+all three sets of constants. It can be shown that although the 
+HI2 accumulation method is correct for a constant uniform 
+shear stress it is unlikely to be correct for anything else. For 
+example, in a case where a constant shear stress is applied 
+for a fixed time interval, and at all other times there is no 
+stress, HI2 will depend on the actual time at which the shear 
+stress interval starts. Because of the time exponent ( -1) in 
+the equation, which is negative for fractional , the later the 
+shear stress is applied the lower the predicted hemolysis. This 
+explains why, even for the hemolyzer, in which the stress is 
+close to uniform, the HI2 results are much lower than those 
+of HI3: the stress occurs in the middle of the device rather 
+than at the start.
+The HI values from HI3 were not inﬂuenced by the time 
+step size, or the actual time, and therefore HI3 looks a prom-
+ising Lagrangian method. However, the correlation coeffi -
+cients are below 0.9 and significantly lower than the Eulerian 
+method. Both HI3 and the Eulerian method are based on 
+the same damage equation, only the implementation differs. 
+We believe the path lines do not fully represent the com -
+plicated ﬂow domains studied here. For example, path lines 
+initiated from the inlet will never enter a recirculation zone, 
+whereas those seeded in a recirculation zone will never exit 
+the device.
+The HI values calculated with HI4 and HI5 prediction meth-
+ods, although not exactly the same, were very close to each 
+other, and to HI3. Both HI4 and HI5 methods aim to account 
+for the loading history. The reasoning is that exposure to high-
+shear stress at a previous time step may result in higher damage 
+at the current time step, as compared with exposure to low 
+shear stress in the previous time step and the same stress in 
+the current time step. Although the two methods differ in their 
+Figure 6. Hemolysis index (HI) measurements and predictions for 
+the Hemolyzer-H at different flow rate conditions for different sets of 
+power law constants: (A) GW constants, (B) HO constants, and ( C) 
+TZ constants. Note the logarithmic scale that highlights the order of 
+magnitude of the differences and that HI3, HI4, and HI5 are in almost 
+identical positions. GW, Giersiepen and Wurzinger constants; HO, 
+Heuser and Opitz constants; TZ, Zhang et al. constants.
+PAGE 8
+370 TASKIN ET AL.
+implementation schemes, the results for the cases studied here 
+are almost identical. They are also very close to the results for 
+HI3, showing that there was no advantage to incorporating the 
+damage history. In fact, the correlation coefficients for HI4 and 
+HI5 were lower than those for HI3.
+Limitations
+The experimental measurements of hemolysis presented 
+here used ovine blood. However, the fragility of RBCs from 
+different species is likely to differ33,34 so this validation analysis 
+is valid only for ovine blood. In addition, the analysis is limited 
+to Couette-type ﬂows and the ﬂow through a specific clinical 
+VAD. It is expected that the errors would be similar in other 
+similar devices, that is, in other centrifugal VADs, however, fur-
+ther studies are required to extend the analysis for other blood-
+contacting devices in which the shear stresses and exposure 
+times are significantly different.
+Blood was treated as a single phase Newtonian ﬂuid. Shear 
+rates were high (>100 sec −1) in the vast majority of the blood 
+volume (the CentriMag pump has <2% of the volume with 
+a shear rate <100 sec −1), which justifies neglecting the shear 
+thinning nature of blood. However, blood consists of two 
+major phases: plasma and RBCs. In certain situations, the rela-
+tive concentrations of the two phases varies, for example, in 
+narrow capillary tubes. The gap in the hemolyzer was just 100 
+μm, so the concentrations may vary across the gap. The models 
+presented cannot account for this.
+The MRF method was used to account for the rotation of the 
+CentriMag pump impeller. The MRF method is an approxima-
+tion that cannot account for transient effects or conditions other 
+than steady state. In reality, as the impeller blades pass the outlet 
+at the cut-water region there is a ﬂuctuation in the pressure head 
+and the ﬂow field, and hence the shear stress field changes.
+This work assesses the hemolysis models for reproducing in 
+vitro hemolysis measurements and does not attempt to account 
+for the complicated nature of ﬂow in vivo. When VADs are 
+implanted, the ﬂow through them is determined by the inter -
+action of the VAD and the native cardiovascular system and 
+therefore has a pulsatile component. In vivo, the plasma free 
+hemoglobin is a balance between the amount of hemoglobin 
+coming from the RBCs and the amount being processed by the 
+kidneys. These hemolysis models cannot calculate the in vivo 
+hemolysis.
+Figure 7. A: Illustrative path lines through the CentriMag pump and (B) variation in shear stress with exposure time along two sample path 
+lines. The operating condition was 4000 rpm and 5 L/min.
+Figure 8.  A: Hemolysis index (HI) contours using the Eulerian 
+model on vertical and horizontal cross-sectional slices through the 
+CentriMag pump at a flow rate of 5 L/min and rotational speeds 
+of 3000 and 5000 rpm. B: A vector plot of an enlarged region at 
+5000 rpm shows the complexity of the flow field and how regions 
+of high HI can develop. For clarity, not all vectors are shown. The 
+TZ constants were used for the calculations shown. TZ, Zhang  
+et al. constants.
+PAGE 9
+ HEMOLySIS ESTIMATION WITH POWER LAW MODELS 371
+Conclusions
+The comparative numerical and experimental results pre -
+sented here demonstrate clearly that the accuracy of power 
+law–based hemolysis prediction is inﬂuenced by both the 
+power law constants and the numerical approach adopted. 
+None of the methods could reproduce the experimental 
+results satisfactorily. The Eulerian scalar transport methods, 
+although having considerable errors compared with the 
+experiments (minimum percentage error = 91%), had high 
+correlation coefficients (>0.99), suggesting that this approach 
+can be used to give relative comparisons of hemolysis in 
+different devices, which would be useful, for example, for 
+ranking different devices or for design optimization.
+Acknowledgment
+This study was partially supported by the National Heart Lung and 
+Blood Institute (Grant Number 5R01HL088100).
+References
+ 1. Blackshear PL Jr, Dorman FD, Steinbach JH: Some mechani -
+cal effects that inﬂuence hemolysis. Trans Am Soc Artif Intern 
+Organs 11: 112–117, 1965.
+ 2. Blackshear PL: Mechanical hemolysis in ﬂowing blood, in Fung 
+Y -C, Perrone N, Anliker M (eds), Biomechanics: Its Foundation 
+Figure 9. Variation in hemolysis index (HI) measurements and predictions in the CentriMag pump with flow rate and rotational speed for the range of 
+models and with the three sets of power law coefficients (A) GW, (B) HO, and (C) TZ. For varying flow rate, the rotational speed was fixed at 4000 rpm 
+and for varying speed the flow rate was fixed at 5 L/min. The experimental values are the averaged measurements, and experimental deviations are 
+indicated with the upper and lower error bars. Note the logarithmic scale that highlights the order of magnitude of the differences and that HI3, HI4, and 
+HI5 are in almost identical positions. GW, Giersiepen and Wurzinger constants; HO, Heuser and Opitz constants; TZ, Zhang et al. constants.
+Table 3. Comparison of Predicted HI Values, from Each 
+Hemolysis Calculation Method and With Each Set of  
+Constants, and the Experimentally Measured HI Values
+Constants Method Error % Error
+Correlation 
+Coefficient
+GW HI1 1.672 21366 0.957
+HI2 0.114 2327 0.819
+HI3 0.403 5805 0.893
+HI4 0.400 5664 0.893
+HI5 0.402 5695 0.893
+E1 0.775 15335 0.996
+HO HI1 0.003 110 0.952
+HI2 0.008 81 0.793
+HI3 0.007 57 0.898
+HI4 0.007 58 0.883
+HI5 0.007 58 0.883
+E1 0.011 91 0.999
+TZ HI1 0.215 3479 0.964
+HI2 0.006 94 0.741
+HI3 0.013 350 0.877
+HI4 0.013 337 0.875
+HI5 0.013 342 0.875
+E1 0.025 1106 0.995
+Data are from all the operating conditions for both Hemolyzer-H 
+and CentriMag blood pump.
+HI, hemolysis index, GW, Giersiepen and Wurzinger constants; 
+HO, Heuser and Opitz constants; TZ, Zhang et al. constants.
+PAGE 10
+372 TASKIN ET AL.
+and Objectives.  Englewood Cliffs, New Jersey, NJ, Prentice 
+Hall, 1972, pp. 501–528.
+ 3. Leverett LB, Hellums JD, Alfrey CP, Lynch EC: Red blood cell dam-
+age by shear stress. Biophys J 12: 257–273, 1972.
+ 4. Kuypers FA: Red cell membrane damage. J Heart Valve Dis  7: 
+387–395, 1998.
+ 5. Arora D, Behr M, Pasquali M: A tensor-based measure for estimat-
+ing blood damage. Artif Organs 28: 1002–1015, 2004.
+ 6. Arora D, Behr M, Pasquali M: Hemolysis estimation in a centrifu-
+gal blood pump using a tensor-based measure. Artif Organs 30: 
+539–547, 2006.
+ 7. Chen Y, Sharp MK: A strain-based ﬂow-induced hemolysis predic-
+tion model calibrated by in vitro erythrocyte deformation mea-
+surements. Artif Organs 35: 145–156, 2011.
+ 8. Giersiepen M, Wurzinger LJ, Opitz R, Reul H: Estimation of shear 
+stress-related blood damage in heart valve prostheses—in vitro 
+comparison of 25 aortic valves. Int J Artif Organs 13: 300–306, 
+1990.
+ 9. Heuser G, Opitz R: A Couette viscometer for short time shearing 
+of blood. Biorheology 17: 17–24, 1980.
+ 10. Zhang T, Taskin ME, Fang HB, et al: Study of ﬂow-induced hemo-
+lysis using novel couette-type blood shearing devices. Artif 
+Organs 35: 1180–1186, 2011. 
+ 11. Fraser KH, Taskin ME, Griffith BP, Wu ZJ: The use of computational 
+ﬂuid dynamics in the development of ventricular assist devices. 
+Med Eng Phys 33: 263–280, 2011.
+ 12. Garon A, Farinas MI: Fast three-dimensional numerical hemolysis 
+approximation. Artif Organs 28: 1016–1025, 2004.
+ 13. Farinas MI, Garon A, Lacasse D, N’dri D: Asymptotically consis -
+tent numerical approximation of hemolysis. J Biomech Eng 128: 
+688–696, 2006.
+ 14. Zhang J, Gellman B, Koert A, et al: Computational and experimen-
+tal evaluation of the ﬂuid dynamics and hemocompatability of 
+the centrimag blood pump. Artif Organs 30: 168–177, 2006.
+ 15. Taskin ME, Fraser KH, Zhang T, et al: Computational characteriza-
+tion of ﬂow and hemolytic performance of the ultramag blood 
+pump for circulatory support. Artif Organs  34: 1099–1113, 
+2010.
+ 16. Fill B, Gartner M, Horner M, Ma J: A comparison of lagrangian and 
+eulerian methodologies for calculating hemolysis. ASAIO J 54: 
+37A, 2008.
+ 17. Goubergrits L: Numerical modeling of blood damage: current sta-
+tus, challenges and future prospects. Expert Rev Med Devices  
+3: 527–531, 2006.
+ 18. Song X, Throckmorton AL, Wood HG, Antaki JK, Olsen DB: Quantita-
+tive evaluation of blood damage in a centrifugal vad by computa-
+tional ﬂuid dynamics. J Fluids Eng 126: 410–418, 2004.
+ 19. Yano T, Sekine K, Mitoh A, et al: An estimation method of hemo -
+lysis within an axial ﬂow blood pump by computational ﬂuid 
+dynamics analysis. Artif Organs 27: 920–925, 2003.
+ 20. Chan WK, Wong YW, Ding Y, Chua LP, Yu SC: Numerical inves-
+tigation of the effect of blade geometry on blood trauma in a 
+centrifugal blood pump. Artif Organs  26: 785–793, 2002.
+21. Grigioni M, Morbiducci U, D’Avenio G, Benedetto GD, Gaudio 
+CD: A novel formulation for blood trauma prediction by a 
+modified power-law mathematical model. Biomech Model 
+Mechanobiol 4: 249–260, 2005.
+22. Zimmer R, Steegers A, Paul R, Affeld K, Reul H: Velocities, shear 
+stresses and blood damage potential of the leakage jets of the 
+Medtronic Parallel bileaﬂet valve. Int J Artif Organs 23: 41–48, 
+2000.
+23. Lim WL, Chew YT, Chew TC, Low HT: Pulsatile ﬂow studies of a 
+porcine bioprosthetic aortic valve in vitro: PIV measurements 
+and shear-induced blood damage. J Biomech 34: 1417–1427, 
+2001.
+24. Grigioni M, Daniele C, Morbiducci U, Di Benedetto G, D’Avenio 
+G, Barbaro V: Potential mechanical blood trauma in vascular 
+access devices: A comparison of case studies. Int J Artif Organs 
+25: 882–891, 2002.
+25. Goubergrits L, Affeld K: Numerical estimation of blood damage in 
+artificial organs. Artif Organs 28: 499–507, 2004.
+26. Bludszuweit C: Three-dimensional numerical prediction of stress 
+loading of blood particles in a centrifugal pump. Artif Organs 
+19: 590–596, 1995.
+27. Arvand A, Hormes M, Reul H: A validated computational ﬂuid 
+dynamics model to estimate hemolysis in a rotary blood pump. 
+Artif Organs 29: 531–540, 2005.
+28. Ge L, Dasi LP, Sotiropoulos F, Yoganathan AP: Characterization 
+of hemodynamic forces induced by mechanical heart valves: 
+Reynolds vs. viscous stresses. Ann Biomed Eng  36: 276–297, 
+2008.
+29. American Society for Testing and Materials: Standard Practice for 
+Assessment of Hemolysis in Continuous Flow Blood Pumps, 
+West Conshohocken, PA, Annual Book of ASTM Standards, 
+1998, Vol. 13.01.
+30. Roache PJ: Perspective: A method for uniform reporting of grid 
+refinement studies. J Fluids Eng 116: 405–413, 1994.
+31. Roache PJ: Quantification of uncertainty in computational ﬂuid 
+dynamics. Annu Rev Fluid Mech 29: 123–160, 1997.
+32. Grigioni M, Daniele C, Morbiducci U, D’Avenio G, Di Benedetto 
+G, Barbaro V: The power-law mathematical model for blood 
+damage prediction: Analytical developments and physical 
+inconsistencies. Artif Organs  28: 467–475, 2004.
+33. Jikuya T, Tsutsui T, Shigeta O, Sankai Y, Mitsui T: Species differences 
+in erythrocyte mechanical fragility: Comparison of human, 
+bovine, and ovine cells. ASAIO J 44: M452–M455, 1998.
+34. Herbertson LH, Lu Q, Malinauskas RA: A single-pass orifice sys -
+tem to assess red blood cell fragility. ASAIO J 56: 86, 2010.

@@ -1,0 +1,773 @@
+PAGE 1
+Numerical Model of Full-Cardiac Cycle Hemodynamics
+in a Total Artificial Heart and the Effect of Its Size on Platelet
+Activation
+Gil Marom & Wei-Che Chiu & Jessica R. Crosby &
+Katrina J. DeCook & Saurabh Prabhakar &
+Marc Horner & Marvin J. Slepian & Danny Bluestein
+Received: 2 September 2014 / Accepted: 20 October 2014 / Published online: 30 October 2014
+# Springer Science+Business Media New Y ork 2014
+Abstract The SynCardia total artificial heart (TAH) is the
+only Food and Drug Administration (FDA) approved device
+for replacing hearts in patients with congestive heart failure. It
+pumps blood via pneumatically driven diaphragms and con-
+trols the flow with mechanical valves. While it has been
+successfully implanted in more than 1300 patients, its size
+precludes implantation in smaller patients. This study ’sa i m
+was to evaluate the viability of scaled-down TAHs by quan-
+tifying thrombogenic potentials from flow patterns. Simula-
+tions of systole were first conducted with stationary valves,
+followed by an advanced full-cardiac cycle model with mov-
+ing valves. All the models included deforming diaphragms
+and platelet suspension in the blood flow. Flow stress
+accumulations were computed for the platelet trajectories
+and thrombogenic potentials were assessed. The simulations
+successfully captured complex flow patterns during various
+phases of the cardiac cycle. Increased stress accumulations,
+but within the safety margin of acceptable thrombogenicity,
+were found in smaller TAHs, indicating that they are clinically
+viable.
+Keywords T o t a la r t i f i c i a lh e a r t. Computational fluid
+dynamics . Fluid–structure interaction . Thrombogenic
+potential . Mechanical circulatory support devices
+Introduction
+Though heart transplantation is the definitive therapy for
+patients with end-stage congestive heart failure (CHF), the
+chronic shortage of donor organs requires a viable solution.
+The SynCardia total artificial heart (TAH; SynCardia Systems,
+Tucson, AZ) is a complete biventricular cardiac replacement
+system for treating biventricular failure [ 1]. Since 2004 the
+TAH has been approved for use by the Food and Drug
+Administration (FDA) in the USA as a bridge-to-transplant
+device for patients at imminent risk of death from
+biventricular heart failure [ 2]. Recently (2012) the TAH also
+received the FDA designation as a humanitarian use device
+(HUD), paving the way for its clinical use as a long-term
+implant as an alternative to transplantation, i.e., for destination
+therapy. The original TAH has a maximum stroke volume of
+70 cc. However, smaller adults and pediatric patients are often
+unable to receive this TAH due to anatomical constraints [ 3].
+In order to accommodate these patients, a 50 cc TAH consid-
+ered for smaller patients and possible pediatric use has been
+designed [4]. A smaller 35 cc TAH is also being considered
+for pediatric patients, including infants.
+Editor-in-Chief Jennifer L. Hall oversaw the review of this article
+Electronic supplementary material The online version of this article
+(doi:10.1007/s12265-014-9596-y) contains supplementary material,
+which is available to authorized users.
+G. Marom : W.<C. Chiu : M. J. Slepian : D. Bluestein (*)
+Department of Biomedical Engineering, Stony Brook University,
+Stony Brook, NY , USA
+e-mail: danny.bluestein@stonybrook.edu
+J. R. Crosby : K. J. DeCook
+Biomedical Engineering GIDP , University of Arizona, Tucson, AZ,
+USA
+S. Prabhakar
+ANSY?S Fluent India Pvt. Ltd., Pune, India
+M. Horner
+ANSY?S, Inc., Evanston, IL, USA
+M. J. Slepian
+Department of Biomedical Engineering, University of Arizona,
+Tucson, AZ, USA
+M. J. Slepian
+Sarver Heart Center, University of Arizona, Tucson, AZ, USA
+J. of Cardiovasc. Trans. Res. (2014) 7:788–796
+DOI 10.1007/s12265-014-9596-y
+PAGE 2
+All three TAHs have similar design that can replace the two
+ventricles. Each chamber pumps blood via pneumatic dis-
+placement of a polymer diaphragm [ 5]. Since the TAH emu-
+lates the pulsatile blood flow of native hearts, valves are
+required for regulating and directing the flow into and out of
+the chambers. The TAH employs mechanical tilting disk heart
+valves, initially Medtronic Hall (Medtronic Inc., Minneapolis,
+MN) and presently Syn-HallTM (SynCardia Systems, Tucson,
+AZ), that are mounted at the inlet and outlet of each chamber
+[5]. Similar to most currently available mechanical circulatory
+support (MCS) devices, the TAH induces nonphysiologic
+blood flow patterns and high flow shear stresses [6, 7]. While
+these elevated stress levels may lead to platelet activation [8],
+to date the TAH has had a clinically acceptable thrombosis
+rate, being significantly low er than that observed with
+biventricular assist devices (Bi-V ADs), typically continuous
+flow blood pumps [9, 10].
+In order to estimate the thrombogenic potential of a blood
+pumping device, numerical methods can be employed to
+calculate the shear stress field, as well as other hemodynamic
+aspects that may contribute to it, and provide detailed insights
+that experiments cannot capture. Computational Fluid Dy-
+namics (CFD) and fluid –structure interaction (FSI) models
+were previously utilized in simulations of various mechanical
+valves [11–17] and MCS devices [18, 19]. Sonntag et al. [20]
+employed FSI model to simulate the flow in the ReinHeart
+TAH device, where the diaphragm motion is controlled by a
+piston rather than an air pump. This study however neglected
+the valves by imposing simple open or closed boundary
+conditions. Penrose and Staples [ 21] suggested a FSI tech-
+nique for cardiovascular devices and used it for modeling the
+Berlin Heart ventricular assist device (V AD). The motion of
+the diaphragm was modeled, yet the valves were not included.
+Avrahami et al. [ 22] also modeled the flow through Berlin
+Heart. Although the valves in their model were fixed in the
+opened position, they prevented regurgitation during the clos-
+ing phases by virtually changing the dynamic viscosity. This
+method for modeling the valves was later used by Medvitz
+et al. [ 23] and Topper et al. [ 24] for different types of Penn
+State V AD. Current literature describing flow through bileaflet
+mechanical heart valves (MHVs), on the other hand, do em-
+ploy FSI models that also simulate the leaflets ’ motion
+[13–15, 17, 21]. In bileaflet MHV , the leaflets can only rotate
+around their hinges and their motion is defined by one degree
+of freedom. Monoleaflet valves, like the Björk –Shiley valve
+and the Medtronic Hall heart valve, can simultaneously rotate
+and translate. Still, some two-dimensional (2-D) studies sim-
+plified the motion of Björk –Shiley by assuming it can only
+rotate around its pivot point [25]. Hose et al. [16]e m p l o y e da
+3-D FSI model to study the Björk –Shiley valve where the
+closure motion was simplified by separating it into translation
+and rotation phases, a method that cannot be used to represent
+the complex motion of the Medtronic Hall or Syn-Hall leaflet.
+Pelliccioni et al. [ 26] presented FSI model of the Medtronic
+Hall valve, including both displacement and rotation, but this
+model was 2-D.
+Although the influence of mechanical heart valves and
+MCS devices on platelet activation is well known, no previous
+study has investigated their influence on the hemodynamics in
+the SynCardia TAH using numerical models. The aims of the
+current study were to evaluate the flow regime in SynCardia
+TAHs and to estimate the risk of platelet damage in TAHs of
+varying sizes. Initially, a simpler model of a 50 cc TAH is
+compared to larger and smaller TAHs. These models include
+the deforming diaphragm and the blood flow through the left
+chamber, but the valves are fixed in their systolic position and
+the boundary conditions (BCs) are only based on the pressure
+gradient. A multiphase model with injection of platelet parti-
+cles is employed to calculate their trajectories and stress
+accumulation (SA) distribution. These results from the three
+TAH models are then compared. In the second part, a more
+advanced and extensive FSI model of the 70 cc TAH is
+presented. In addition to the features of the simpler systolic
+model, this model includes the coupled FSI motion of the two
+valves, more realistic BCs, and turbulence modeling.
+Methods
+The present models focus on the flow in the left ventricular
+chamber of TAHs. The geometry of 50 cc TAH was recon-
+structed from the original TAH design (provided by the man-
+ufacturer) with Medtronic Hall mechanical valves in the mitral
+and aortic positions. The valves were oriented with 55° be-
+tween them based on previous optimization we have per-
+formed for reduced thrombogenicity [ 4]. Larger and smaller
+models, with length scaling of 1.1 and 0.91, or maximum
+stroke volumes of 70 and 35 cc, respectively, are also modeled
+for comparison of the thrombogenic potential of platelets by
+flow-induced stresses. These dimensions were chosen to com-
+ply with available valve sizes with nominal diameters between
+16 and 22 mm. The fluid domain included the geometry of the
+left ventricle chamber with extended straight tubes that were
+connected to the two valves. Tetrahedral mesh with varying
+number of cells was generated for the flow domain. The
+number of cells varies according to the remeshing
+algorithm, ranging between 5 and 8 million. The mesh density
+was chosen based on mesh independence studies for station-
+ary mesh because the remeshing is part of the solution itself
+that inevitably alters the results [ 27]. The mesh includes
+boundary layer cells in the vicinity of the diaphragm and mesh
+refinement near the valves. V arying time step of 5×10 −5 to
+1×10 −3 s guaranteed convergence under all simulation
+conditions.
+Since the 50 and the 35 cc TAHs are still in the design
+phase, there is a lack of sufficient data about the operating
+J. of Cardiovasc. Trans. Res. (2014) 7:788–796 789
+PAGE 3
+conditions of these devices. Hence, the models of the systolic
+phase only were used to compare the three device designs.
+During the systolic phase, the valvular motions are relatively
+limited; thus, the mitral and aortic valves were positioned in
+their fully closed and fully open configurations, respectively
+(Fig. 1). In the more advanced model of the full-cardiac cycle,
+the motions of the disks in the Medtronic Hall valves were
+also calculated utilizing user-defined functions (UDFs). The
+coupling of the rigid body motions and the flow solution is
+based on the axial velocity of the disk ’s center of mass. The
+center of mass ’ axial velocity is assumed to be equal to the
+average velocity of the surrounding flow. The path of the
+center of mass and the proper rotation angle for every position
+on this path are based on initial“dry” finite element analysis of
+the valve with constant loading. In this calculation, a small gap
+of 0.35 mm was kept between the contact surfaces of the disk,
+hinges, and shaft to prevent full contact in the CFD code. This
+predefined calculated path was used to define the lateral and
+angular velocities at every position. The motion of all the
+nodes on the outer surface of the disks was calculated based
+on rigid body motion relative to the center of mass. Since this
+model focuses on hemodynamics rather than the structural
+mechanics, the disk’s rotation around the shaft was neglected.
+The motion of the fluid mesh is calculated by diffusion and
+remeshing algorithms.
+The position of the diaphragm at each time step is repre-
+sented by radial biquadratic function. The systolic position of
+the diaphragm was based on the design drawings while the
+diastolic position was calculated by a contact with a pushing
+ball, using the finite element ANSYS Mechanical 15 (ANSYS
+Inc., Canonsburg, PA). The polynomial coefficients were
+calculated for these systolic and diastolic extremities, as
+shown in Fig. 2a. The motion of the diaphragm is calculated
+by assuming that the polynomial coefficients are varying
+between these two extremities and that the temporal function
+has a sinusoidal form. This motion of the diaphragm is imple-
+mented by UDFs, and similar to the valve motions, the flow
+mesh in the diaphragm ’s region can be remeshed. The fre-
+quency of the sinusoidal function is based on the heart rate of
+each device, namely, 120, 140, and 164 bpm for the 70, 50,
+and 35 cc TAHs, respectively, in the systolic models. A
+frequency of 100 bpm is defined in the more advanced FSI
+model, based on the experimental setup. Although these
+predefined sinusoidal waveforms do not fully replicate the
+physiologic flow conditions, they were chosen as they corre-
+spond to the TAH measured pressure waveforms; thus, they
+can be used to demonstrate the calculation of the valves ’
+motion. Representative cross sections of the mesh in the
+regions of the diaphragm and the aortic valve, at different
+instances during the cycle, are presented in Fig. 2b, c.I nt h e
+simplified systolic models, the BCs are defined based on the
+pressure gradient relative to the aorta and the fact that the
+mitral valve is closed. Therefore, the outlet of the tube in the
+aortic side is defined as a zero pressure, and the closed mitral
+valve is represented with a closed tube. In the more advanced
+FSI model, the pressure BCs at these two outlets are based on
+averaged and smoothed experimental data (Fig. 3). These
+measurements were taken using Millar SPR-524 catheters
+(Millar Instruments, Inc., Houston TX) from a 70 cc TAH
+that was connected to a Donovan Mock Circulatory System
+[28] (SynCardia Systems, Inc., Tucson, AZ). In order to
+stabilize the effects of the initial conditions, more than two
+Fig. 1 Schematic description of the 50 cc TAH with the initial configu-
+ration of the diaphragm and the valves
+Fig. 2 a The radial position of the diaphragm during peak systole
+(continuous line) and diastole ( dashed line)a n d b and c representative
+cross sections of the dynamic mesh at different instances of the cardiac
+cycle. Zoom-in on the diaphragm region (b) and zoom-in on the symme-
+try section of the aortic valve ( c)
+790 J. of Cardiovasc. Trans. Res. (2014) 7:788–796
+PAGE 4
+cardiac cycles were simulated and only the results of the last
+cycle were analyzed.
+Platelet trajectories are calculated by employing a multi-
+phase model with particle injection. Approximately 20,000
+spherical particles, with constant diameter of 3 μm and the
+density of the surrounding fluid, are released from a surface
+within the chamber. The stress history of these platelet parti-
+cles are collected and rendered to calculate the SAs for each
+platelet trajectory. The SA is defined herein as the linear
+product of the stress magnitude and the exposure time [ 12].
+In order to efficiently represent the SA of thousands of trajec-
+tories, the probability density function (PDF) method is
+employed to statistically represent the SA distribution or the
+thrombogenic footprint of the device [12]. Briefly, the PDF is
+the statistical distribution of all the SA values reached by each
+individual platelet along its corresponding flow trajectory
+through the device. The three TAHs are compared by the
+median values of SA and their distribution.
+The model is solved by ANSYS Fluent 15 (ANSYS Inc.,
+Canonsburg, PA) assuming the blood is Newtonian [ 23]a n d
+isothermal at a temperature of 37 °C. The flow is assumed
+laminar in the systolic flow models [29]. In the more advanced
+FSI model, turbulence is taken into account by employing a
+shear stress transport (SST) k–ω model with low Reynolds
+number correction. This turbulence model was chosen due to
+its ability to resolve transitional characteristics of flows in
+circulatory devices, coupled with its ability to accurately
+predict pressure and velocity fields in these devices [ 30]. To
+improve the convergence of the dynamic mesh model, the
+blood is modeled as a slightly compressible liquid with a bulk
+modulus of 2.7×10 9 Pa [ 27]. A finite volume method was
+employed for solving the unsteady 3-D Navier –Stokes and
+mass conservation equations using arbitrary Lagrangian –
+Eulerian (ALE) approach for the dynamic mesh. The implicit
+flow solver uses second-order spatial scheme and temporal
+discretization.
+Results
+In this section, the results of the three TAH size systolic
+models are compared and results of the advanced FSI model
+are presented for the 70 cc TAH. First, detailed results of the
+systolic 50 cc model are described, including the flow velocity
+field and the particle trajectories. Then, the PDF distributions
+of the three systolic models are compared in terms of the effect
+of the TAH sizing on its corresponding thrombogenic poten-
+tial. Lastly, results of the advanced FSI model of the full-
+cardiac cycle with the valves free to move are introduced.
+Base Case of the Systolic Model: SynCardia 50 cc TAH
+The first row of Fig. 4 shows the velocity vectors at three
+different instances in the 50 cc TAH. At the beginning of the
+systolic phase ( t=25 ms), a strong flow through the aortic
+valve is depicted. This strong aortic flow, with a maximum
+t
+Fig. 3 The pressure boundary conditions of the advanced FSI model as a
+function of time
+Fig. 4 The simplified 50 cc TAH
+model at three instances during
+the systole. V elocity vectors on
+representative cross sections and
+particle location with their local
+laminar stress magnitudes are
+shown in the first and second
+rows, respectively
+J. of Cardiovasc. Trans. Res. (2014) 7:788–796 791
+PAGE 5
+velocity of 1.8 m/s inside the center hole of the disk, opens the
+aortic valve after diastole. A regurgitant flow through the
+mitral valve is depicted with a velocity magnitude of 0.6 m/
+s. This regurgitant flow was stronger earlier in the cardiac
+cycle when it reached velocity of 1.4 m/s. V ortices are found
+on the chamber side of the mitral valve at the initial systolic
+phase (t=25 ms). Later at systole, when the diaphragm reaches
+its fully inflated position (t=210 ms), the velocity of the flow
+through the aortic valve decreased to 0.5 m/s, following the
+diaphragm deceleration before starting the reverse motion. At
+the end of systole ( t=400 ms), the strong backflow in the
+aortic valve should close this valve before reaching the dias-
+tole (the valves were assumed stationary at these systole-only
+simulations). Dispersion patterns of platelets are depicted at
+the three instances in the second row of Fig. 4. The particles
+are colored by the instantaneous local laminar stress magni-
+tude that is induced by the surrounding flow. The location of
+the particle releasing surface can be seen at the beginning of
+the systole ( t=25 ms), when particle movement is still rela-
+tively small. As expected, the locations with the highest stress
+magnitudes are mostly near the aortic valve and the moving
+diaphragm.
+Comparison with 70 and 35 cc Devices
+The flow fields of the three TAH models were compared
+during peak systole just before the deceleration when the flow
+velocities and the ensuing shear stresses are the highest (at a
+time point of 30 % of the cardiac cycle). At this time instant,
+the maximum velocity magnitudes increase with the decrease
+of the TAH dimensions (1.24, 1.16, and 0.98 m/s for the 35,
+50, and 70 cc TAHs, respectively). The SA distribution of the
+three models is represented by their PDFs in Fig. 5.A sm i g h t
+be expected, there is an increasing probability that platelets in
+the smaller devices will be subjected to higher SA values. This
+is apparent from the median SAs of 3.41, 2.19, and
+1.12 dyne ⋅s/cm 2, for the 35, 50, and 70 cc TAHs,
+respectively (marked as vertical dashed lines in Fig. 5). The
+probability for SA of more than 10 dyne ⋅s/cm2 is lower than
+1 % for all the three models. This probability may be consid-
+ered negligible, with the SA values well within the safety
+range, i.e., well below the Hellums criterion of 35 dyne ⋅s/
+cm2 threshold for platelet activation [8], though the trend of a
+higher probability for elevated stresses in smaller TAHs is
+clear.
+Advanced FSI Model of the 70 cc TAH
+In this FSI model, the motion of the two valves is calculated
+based on their interaction with the flow field. The left column
+of Fig. 6 compares the flow field on the symmetry plane of the
+aortic valve at four instances. The gray background marks the
+fluid domain, thereby showing the location of the struts.
+During systole ( t=0 ms in Fig. 6), most of the blood flows
+through the larger opening on the right. The flow direction at
+this time is controlled mainly by the opening angle of the
+valve’s leaflet. It should be noticed that although the velocity
+magnitudes in this more advanced and extensive model are
+relatively small (as mentioned before), the flow through the
+valve at this stage reaches a velocity of 0.5 m/s. The color
+scale of the velocity in Fig. 6 was chosen to emphasize the
+locations of high and low velocity magnitudes. The valve is
+stationary at its fully opened position for approximately one
+third of the cycle (191 ms), presenting an obstruction to the
+flow (with no-slip zero velocity on its surface). During the
+closing and opening phases (t=145 and 525 ms), however, the
+disk moves with the same velocity as the flow. In this model,
+the opening and closing of both valves takes approximately
+35 ms. At t=145 ms, although the aortic valve has already
+completed half of its excursion toward complete closure, the
+vortex that alters the direction of the flow is still visible at the
+top of the figure. Since this vortex is shown during the change
+in the flow direction, the velocity in its center is almost zero.
+During diastole, there is a regurgitant flow through the central
+0
+0.2
+0.4
+0.6
+05 1 0
+ytisnedytilibaborP
+noitcnuf
+Stress accumulation [dyne·s/cm2]
+35 cc
+50 cc
+70 cc
+1.12 2.19 3.41
+0
+0.002
+0.004
+0.006
+0.008
+0.01
+10 25 40
+Probability density function
+Stress accumulation
+[dyne·s/cm2]
+Fig. 5 Probability density
+function (PDF) of the stress
+accumulation of the three TAH
+sizes (their “thrombogenic
+footprint”). The vertical dashed
+lines mark the median values
+792 J. of Cardiovasc. Trans. Res. (2014) 7:788–796
+PAGE 6
+hole of the disk and through the gap between the disk and the
+base ring. As a result of the much smaller opening area, the
+flow reached a velocity magnitude of more than 1.5 m/s.
+During the opening ( t=525 ms), after the flow changed its
+direction once again, most of the flow pushes the disk and is
+not directed mostly toward the openings (as found during the
+systole only few milliseconds afterwards). Obviously similar
+patterns can also be found in the region of the mitral valve.
+However, the velocity magnitudes in this region are smaller,
+with velocities of 0.44 and 0.49 m/s during diastole and
+regurgitation through the closed valve, respectively.
+Figure 6 compares the velocity vectors and platelet particle
+locations at four different instances during the cardiac cycle.
+The first row (t=150 ms) shows the closing of the aortic valve
+at the end of the systolic phase while the mitral valve is
+completely closed. At this instance, there is regurgitant flow
+through the mitral valve while the flow from the aorta closes
+the aortic valve. The highest scalar stress, that includes both
+laminar and turbulent stresses, is found near the aortic valve at
+this instance. These flow stresses are applied on the platelet
+particles that flowed through the valve during systole and in
+this instance are flowing back in the ventricle direction. Later,
+during the diastolic phase, the diaphragm is moving in the
+direction of the air chamber ( t=300 ms) until it reaches its
+extreme position and starts to move in the opposite direction
+(t=450 ms). During these times, the ventricle is filled through
+Fig. 6 The 70 cc SynCardia TAH FSI model at four instances during the
+full-cardiac cycle. V elocity vectors on two representative cross sections
+and platelet dispersion patterns with their local scalar (laminar and
+turbulent) stress magnitudes are shown in the first and second columns,
+respectively (animation appears in the online version of this article)
+J. of Cardiovasc. Trans. Res. (2014) 7:788–796 793
+PAGE 7
+the open mitral valve and th ere is a relatively strong
+regurgitant flow through the aortic valve, as discussed above.
+The highest stress levels are found in these regurgitation sites,
+in the central jet and in the gap between the disk and the ring.
+During systole (t=600 ms), blood is ejected through the aortic
+valve but there is also regurgitation through the closed mitral
+valve. Even though there is a strong flow through the open
+aortic valve and the regurgitation has a slightly smaller veloc-
+ity magnitude, the highest scalar stress levels in this instant are
+still found in the regurgitation regions. At this time, the
+particles are dispersed throughout the ventricle and the tubes,
+with relatively large amount of particles in the mitral tube that
+have arrived there with the regurgitant flow.
+Discussion
+This study presents numerical models of SynCardia TAHs,
+including three models of the systolic phase in TAHs of
+differing sizes and a more advanced FSI model of the 70 cc
+TAH full-cardiac cycle. All of these models include, for the
+first time, motion of the diaphragm and a multiphase model of
+platelet particle transport. In the systolic models, the valves
+were fixed in their systolic fully open (aortic) and fully closed
+(mitral) positions, with predefined BCs, as there is no avail-
+able data on the physical pressures in the scaled-down de-
+vices. These models were used for comparing their
+thrombogenic potential. This is achieved by computing the
+SA of large populations of platelets along their corresponding
+flow trajectories and plotting the statistical distribution of
+these SAs (the PDF) for each of the three TAH sizes. The
+PDF represents the “thrombogenic footprint” of the device
+and is an effective means of comparing the effects of the sizing
+on its thrombogenic potential. For this comparative study, the
+distributions were calculated by applying identical conditions
+in the three devices rather than estimating the interindividual
+variability. The more advanced FSI model of 70 cc TAH
+demonstrated the ability to model the valves ’ motion, to
+impose boundary conditions that are based on actual measured
+data, and to additionally calculate the applied turbulent stress-
+es acting on the platelet under these conditions. This model
+also introduces for the first time several new capabilities,
+including TAH simulation with FSI modeling of the valves ’
+motion and the first 3-D FSI models of Medtronic Hall valves
+moving with all degrees of freedom.
+While this is an FSI simulation, the lack of accurate de-
+scription of the diaphragm motion prevented the flow from
+reaching physiologic flow rates. We are currently working on
+improving the predefined motion applied in the current simu-
+lation by gathering more accurate data on the diaphragm
+motion from dedicated experiments. If this data, i.e., measure-
+ment of both the pressure and the nonuniform diaphragm
+motion, will be available for the smaller TAHs, it will facilitate
+comparing the thrombogenic potential of the three devices
+during the entire cardiac cycle. Moreover, it will enable vali-
+dation of these future models with other measured data, such
+as flow rates. Other possible improvements of the numerical
+model might include more advanced turbulence models, better
+spatial or temporal discretization, and FSI model of the dia-
+phragm motion based on the pneumatic pressure that drives it.
+The results of the current models depict several complex
+flow dynamics and flow patterns that were present both in the
+base case of the systolic models and in the case of the full-
+cardiac cycle FSI model. Of particular interest is the
+regurgitant flow through the closed valves. Jets of blood flow
+through the central hole of the closed valves were present in
+both types of models. In the systolic 50 cc model, at the
+beginning of the systole ( t=10 ms), there is a regurgitant jet
+with a velocity of 1.4 m/s through the mitral disk. This strong
+jet creates a vortex ring that decays rather quickly and can
+hardly be seen at t=25 ms (Fig. 4). Although the duration of
+the mitral regurgitation is very short, a low-velocity flow field
+is found in this model leeward of the mitral valve until the end
+of the systole ( t=400 ms in Fig. 4). Similar jets through the
+closed aortic and mitral valves were also found in the FSI
+model of the 70 cc TAH. The aortic jet was directed toward the
+moving diaphragm, and therefore, it is hard to tell whether the
+complex flow field in the ventricle is a result of the diaphragm
+motion or the vortex ring. In this model, the leakage around
+the disks of the closed valves can also be clearly seen
+(t=240 ms for the aortic valve, as well as t=300 and 450 ms
+in Fig. 6). It is interesting to mention that leakage flow patterns
+are found even though the sizes of the disks were not altered,
+unlike in previous simulations that reduced the disks sizes and
+therefore increased the gap width [15, 31]. This strong leakage
+may also be an artifact of the nonphysiologic combination of
+the boundary conditions and diaphragm motion. There are
+several numerical methods to prevent this leakage; however,
+as this paper focuses on the thrombogenic potential and these
+sites are regions of elevated flow stresses, such simplifica-
+tion cannot be applied here. Another interesting flow pattern
+is the vortices on the chamber side of the closed mitral
+valve, which can clearly be seen in the systolic models
+(e.g., 25 ms in Fig. 4). These vortices are a result of the
+back step effect of the smaller tube diameter near the closed
+valve.
+The calculation of the particle trajectories predicts the
+platelet exposure to flow stresses, taking into account the
+combined effect of the dynamic stress levels, platelet experi-
+ences, and the duration they are exposed to it, which is the
+correct way to estimate their activation potential. In the sys-
+tolic models, as well as in the advanced FSI model, the highest
+stresses are found in the vicinity of the valves, especially
+within the regurgitant flow through the closed valves. The
+additional turbulent stresses in the more advanced model
+794 J. of Cardiovasc. Trans. Res. (2014) 7:788–796
+PAGE 8
+increased the stress levels relative to the systolic cases (right
+column of Fig. 6 and bottom row of Fig. 4,r e s p e c t i v e l y ) .I n
+the systolic model, almost none of the particles seems to flow
+through the closed mitral valve (t=400 ms in Fig. 4). This fact
+might indicate that although the regurgitating flow in this case
+was quite fast locally, its average flow rate is almost negligi-
+ble. However, in the FSI of the full-cardiac cycle simulation,
+there are quite a few particles that left the ventricle and can still
+be found on the atrial or aortic sides of the mitral and aortic
+valves, respectively (Fig. 6). The main reason for this appears
+to be the regurgitant flow during the valves ’ closure, which
+has a shorter duration but it is much stronger than the leakage
+around the disk and through the central hole of the closed
+valves. In both models, the back and forth motion of the
+diaphragm disperses the particles in the chamber almost even-
+ly until the end of the simulation.
+The thrombogenic potential of the three types of TAH was
+compared based on their SA distribution. As mentioned be-
+fore, these distributions were calculated in the systolic models
+only for comparative purposes, where similar assumptions
+were applied. Although the SA distribution can easily be
+calculated from the scalar flow stresses that the platelets in
+the advanced FSI model were subjected to, this information is
+not presented here as it is not comparable to the other models.
+In the systolic models, an increased probability for platelets in
+the smaller devices to be subjected to higher SA levels was
+found. This is attributed to both the reduced size and the
+higher pumping frequencies, or heart rates, that accelerate
+the blood flow through them. Although these findings might
+indicate that platelets in smaller TAHs are more prone to
+activation, it should be noted that the bulk of the PDF distri-
+butions of all TAH sizes are overlapping. Therefore, it is
+reasonable to assume that their thrombogenic potential is
+close. Utilizing our device thrombogenicity emulation
+(DTE) methodology, which we have previously employed
+for optimizing the thromboresistance of MCS devices, in the
+future minor design changes may mitigate this potential in-
+crease in stress activation [ 6]. Necessarily, the ultimate
+thrombogenicity determination may require clinical studies
+in human subjects (the FDA exempts SynCardia from animal
+experiments in TAHs, under the HUD designation), though
+from the above numerical simulations, the thrombogenicity of
+scaled-down devices appears safe and well below the stress
+threshold associated with significant platelet activation. These
+clinical studies could also investigate the effect of antiplatelet
+and anticoagulant medication or the variability of platelet
+reactivity.
+In conclusion, numerical models of the TAH of three sizes
+with deforming diaphragms and particle injection have been
+developed. These models were utilized for comparing the
+effect of scaling down the TAH size on the thrombogenic
+potential, as well as to show a proof-of-concept for advanced
+full-cardiac cycle model. The resulting flow patterns captured
+the mitral and aortic regurgitation, the opening and closing of
+the valve as a result of the blood flow, and the ensuing intricate
+flow dynamics generated as a result of the interaction of the
+valve dynamics and the flow field. There is a mild trend of
+increased probability that platelets in smaller devices will be
+exposed to elevated stresses as a result of the combined effect
+of higher pumping frequency and the smaller dimensions that
+may translate into a mild increase in platelet activation. The
+latter nevertheless appear to be within the safety margin of
+acceptable thrombogenicity levels, indicating that scaled-
+down versions of the TAH are clinically viable for smaller
+and pediatric patients.
+Acknowledgments We thank Matthew Pollack from Boston Universi-
+ty for his help in reconstructing the geometry. We also thank Doug Nutter
+and Richard Smith for information on TAH engineering drawings and
+operating conditions. The software was provided by an ANSYS Aca-
+demic Partnership with Stony Brook University.
+Conflict of Interest Dr. Slepian declares participation in review activ-
+ities for SynCardia Inc. All the other authors declare no conflict of
+interest. No human or animal studies were carried out by the authors for
+this article.
+Sources of Funding This study was funded by grants from the National
+Institute of Health: National Institute of Biomedical Imaging and Bioen-
+gineering Quantum A ward: Implementation Phase II-U01 EB012487-04
+(D.B.).
+References
+1. Copeland, J. G., Smith, R. G., Arabia, F. A., Nolan, P . E., Sethi, G. K.,
+Tsau, P . H., McClellan, D., & Slepian, M. J. (2004). Cardiac replace-
+ment with a total artificial heart as a bridge to transplantation. The
+New England Journal of Medicine, 351 (9), 859–867. doi:10.1056/
+NEJMoa040186.
+2. Slepian, M. J., Smith, R. G., & Copeland, J. C. (2006). The
+SynCardia CardioW est total artificial heart. In K. L. Baughman &
+W. A. Baumgartner (Eds.),Treatment of advanced heart disease, vol
+56. Fundamental and clinical cardiology series(pp. 473–490). New
+Y ork: Taylor & Francis Group.
+3. Frazier, O. H., & Cohn, W. E. (2012). Continuous-flow total heart
+replacement device implanted in a 55-year-old man with end-stage
+heart failure and severe amyloidosis. T exas Heart Institute journal /
+from the Texas Heart Institute of St Luke’s Episcopal Hospital, T exas
+Children’s Hospital, 39(4), 542–546.
+4. Slepian, M. J., Alemu, Y ., Girdhar, G., Soares, J. S., Smith, R. G.,
+Einav, S., & Bluestein, D. (2013). The Syncardia total artificial heart:
+in vivo, in vitro, and computational modeling studies. Journal of
+Biomechanics, 46 (2), 266 –275. doi: 10.1016/j.jbiomech.2012.11.
+032.
+5. Platis, A., & Larson, D. F. (2009). CardioWest temporary total
+artificial heart. Perfusion, 24 (5), 341 –346. doi: 10.1177/
+0267659109351330.
+6. Girdhar, G., Xenos, M., Alemu, Y ., Chiu, W. C., Lynch, B. E., Jesty,
+J., Einav, S., Slepian, M. J., & Bluestein, D. (2012). Device
+thrombogenicity emulation: a novel method for optimizing mechan-
+ical circulatory support device thromboresistance. PLoS One, 7 (3),
+e32463. doi:10.1371/journal.pone.0032463.
+J. of Cardiovasc. Trans. Res. (2014) 7:788–796 795
+PAGE 9
+7. Xenos, M., Girdhar, G., Alemu, Y ., Jesty, J., Slepian, M., Einav, S., &
+Bluestein, D. (2010). Device Thrombogenicity Emulator (DTE) —
+design optimization methodology for cardiovascular devices: a study
+in two bileaflet MHV designs. Journal of Biomechanics, 43 (12),
+2400–2409. doi:10.1016/j.jbiomech.2010.04.020.
+8. Kroll, M. H., Hellums, J. D., McIntire, L. V ., Schafer, A. I., & Moake,
+J. L. (1996). Platelets and shear stress. Blood, 88(5), 1525–1541.
+9. Leshnower, B. G., Smith, R. G., Ohara, M. L., Woo, J., Pochettino,
+A., Morris, R. J., Gardner, T. J., Slepian, M. J., Copeland, J. G.,
+Acker, M. A. (2007). Is the total artificial heart superior to BIV AD
+therapy as a method of bridging patients to heart transplantation?
+Paper presented at the 43rd Annual meeting of the Society of
+Thoracic Surgeons, San Diego, CA, January 29–31.
+10. Copeland, J. G., Copeland, H., Gustafson, M., Mineburg, N.,
+Covington, D., Smith, R. G., & Friedman, M. (2012). Experience
+with more than 100 total artificial heart implants. The Journal of
+Thoracic and Cardiovascular Surgery, 143 (3), 727 –734. doi: 10.
+1016/j.jtcvs.2011.12.002.
+11. Richards, K. E., Deserranno, D., Donal, E., Greenberg, N. L.,
+Thomas, J. D., & Garcia, M. J. (2004). Influence of structural
+geometry on the severity of bicuspid aortic stenosis. American
+Journal of Physiology. Heart and Circulatory Physiology, 287 (3),
+H1410–H1416. doi:10.1152/ajpheart.00264.2003.
+12. Alemu, Y ., & Bluestein, D. (2007). Flow-induced platelet activation
+and damage accumulation in a mechanical heart valve: numerical
+studies. Artificial Organs, 31(9), 677–688. doi:10.1111/j.1525-1594.
+2007.00446.x.
+13. Borazjani, I., Ge, L., & Sotiropoulos, F. (2010). High-resolution
+fluid-structure interaction simulations of flow through a bi-leaflet
+mechanical heart valve in an anatomic aorta. Annals of Biomedical
+Engineering, 38(2), 326–344. doi:10.1007/s10439-009-9807-x.
+14. Hong, T., & Kim, C. N. (2011). A numerical analysis of the blood
+flow around the bileaflet mechanical heart valves with different
+rotational implantation angles. Journal of Hydrodynamics, 23 (5),
+607–614. doi:10.1016/S1001-6058(10)60156-4.
+15. Dumont, K., Vierendeels, J., Kaminsky, R., van Nooten, G.,
+V erdonck, P ., & Bluestein, D. (2007). Comparison of the hemody-
+namic and thrombogenic performance of two bileaflet mechanical
+heart valves using a CFD/FSI model. Journal of Biomechanical
+Engineering, 129(4), 558–565. doi:10.1115/1.2746378.
+16. Hose, D. R., Narracott, A. J., Penrose, J. M., Baguley, D., Jones, I. P .,
+& Lawford, P . V . (2006). Fundamental mechanics of aortic heart
+valve closure. Journal of Biomechanics, 39 (5), 958 –967. doi: 10.
+1016/j.jbiomech.2005.01.029.
+17. Dasi, L. P ., Ge, L., Simon, H. A., Sotiropoulos, F., & Y oganathan, A.
+P . (2007). V orticity dynamics of a bileaflet mechanical heart valve in
+an axisymmetric aorta. Physics of Fluids, 19 (6), 067105. doi: 10.
+1063/1.2743261.
+18. Chiu, W. C., Slepian, M. J., & Bluestein, D. (2014). Thrombus
+formation patterns in the HeartMate II ventricular assist device:
+clinical observations can be predicted by numerical simulations.
+ASAIO Journal, 60 (2), 237 – 240. doi: 10.1097/MA T.
+0000000000000034.
+19. Zhang, J., Zhang, P ., Fraser, K. H., Griffith, B. P ., & Wu, Z. J. (2013).
+Comparison and experimental validation of fluid dynamic numerical
+models for a clinical ventricular assist device. Artificial Organs,
+37(4), 380–389. doi:10.1111/j.1525-1594.2012.01576.x.
+20. Sonntag, S. J., Kaufmann, T. A. S., Busen, M. R., Laumen, M.,
+Linde, T., Schmitz-Rode, T., & Steinseifer, U. (2013). Simulation
+of a pulsatile total artificial heart: development of a partitioned Fluid
+Structure Interaction model. Journal of Fluid and Structures, 38 ,
+187–204. doi:10.1016/j.jfluidstructs.2012.11.011.
+21. Penrose, J. M. T., & Staples, C. J. (2002). Implicit fluid-structure
+coupling for simulation of cardiovascular problems. International
+Journal for Numerical Methods in Fluids, 40 (3–4), 467 –478. doi:
+10.1002/Fld.306.
+22. Avrahami, I., Rosenfeld, M., Raz, S., & Einav, S. (2006).
+Numerical model of flow in a sac-type ventricular assist
+device. Artificial Organs, 30 (7), 529 –538. doi: 10.1111/j.1525-
+1594.2006.00255.x .
+23. Medvitz, R. B., Reddy, V ., Deutsch, S., Manning, K. B., & Paterson,
+E. G. (2009). V alidation of a CFD methodology for positive displace-
+ment LV AD analysis using PIV data. Journal of Biomechanical
+Engineering, 131(11), 111009. doi:10.1115/1.4000116.
+24. Topper, S. R., Navitsky, M. A., Medvitz, R. B., Paterson, E. G.,
+Siedlecki, C. A., Slattery, M. J., Deutsch, S., Rosenberg, G., &
+Manning, K. B. (2014). The use of fluid mechanics to predict regions
+of microscopic thrombus f ormation in pulsatile V ADs.
+Cardiovascular Engineering and T echnology, 5(1), 54 –69. doi: 10.
+1007/s13239-014-0174-x.
+25. Govindarajan, V ., Udaykumar, H. S., Herbertson, L. H., Deutsch, S.,
+Manning, K. B., & Chandran, K. B. (2010). Two-dimensional FSI
+simulation of closing dynamics of a tilting disk mechanical heart
+valve. Journal of Medical Devices, 4 (1), 011001. doi: 10.1115/1.
+4000876.
+26. Pelliccioni, O., Cerrolaza, M., & Herrera, M. (2007). Lattice
+Boltzmann dynamic simulation of a mechanical heart valve device.
+Mathematics and Computers in Simulation, 75 (1–2), 1–14. doi:10.
+1016/j.matcom.2006.08.005.
+27. Marom, G. (2014). Numerical methods for fluid–structure interaction
+models of aortic valves. Archives of Computational Methods in
+Engineering 1–26. doi:10.1007/s11831-014-9133-9.
+28. Donovan, F. M. (1975). Design of a hydraulic analog of the circula-
+tory system for evaluating artificial hearts. Biomaterials, Medical
+Devices, and Artificial Organs, 3 (4), 439 –449. doi: 10.3109/
+10731197509118635.
+29. Y oganathan, A. P ., Chandran, K. B., & Sotiropoulos, F. (2005). Flow
+in prosthetic heart valves: state-of-the-art and future directions.
+Annals of Biomedical Engineering, 33 (12), 1689 –1694. doi: 10.
+1007/s10439-005-8759-z.
+30. Fraser, K. H., Zhang, T., Taskin, M. E., Griffith, B. P ., & Wu, Z. J.
+(2012). A quantitative comparison of mechanical blood damage
+parameters in rotary ventricular assist devices: shear stress, exposure
+time and hemolysis index. Journal of Biomechanical Engineering,
+134(8), 081002. doi:10.1115/1.4007092.
+31. Nobili, M., Morbiducci, U., Ponzini, R., Gaudio, C. D., Balducci, A.,
+Grigioni, M., Montevecchi, F. M., & Redaelli, A. (2008). Numerical
+simulation of the dynamics of a bileaflet prosthetic heart valve using a
+fluid–structure interaction approach. Journal of Biomechanics, 41 ,
+2539–2550. doi:10.1016/j.jbiomech.2008.05.004.
+796 J. of Cardiovasc. Trans. Res. (2014) 7:788–796

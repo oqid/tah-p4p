@@ -1,0 +1,130 @@
+{
+  "input": "C:\\Users\\kingk\\Documents\\tah-p4p\\export_18pa.csv",
+  "metadata": {
+    "expected_seeds": 1000,
+    "outlet_plane": null,
+    "outlet_tolerance": 0.0001,
+    "bpm": 120.0,
+    "flow_model": "SST",
+    "stress_model": "molecular viscosity * scalar shear strain rate",
+    "path": "export_18pa.csv"
+  },
+  "sha256": "0c6fad732078bd569155fce9f631fdee316a360394c214999b0b7c933302273b",
+  "n_nodes": 106198,
+  "n_streamlines": 969,
+  "weighting": "inlet_speed_proxy",
+  "population": "all_exported_unverified",
+  "selected_count": 969,
+  "selected_weight_fraction_of_exported": 1.0,
+  "missing_seed_count": 31,
+  "stress_Pa_point_sampled": {
+    "min": 0.00128221523,
+    "p50": 0.4025976955,
+    "p90": 1.356273783,
+    "p95": 1.9947762074999995,
+    "p99": 5.193215430199995,
+    "max": 18.0609283
+  },
+  "speed_m_s_point_sampled": {
+    "min": 0.0378278084,
+    "p50": 0.904642105,
+    "p90": 1.396018079,
+    "p95": 1.418985304,
+    "p99": 1.4318970631,
+    "max": 1.59467733
+  },
+  "transit_s_all_paths": {
+    "min": 0.05513985141484275,
+    "p50": 0.09975604515169782,
+    "p90": 0.2174418300064405,
+    "p95": 0.23124967075084402,
+    "p99": 0.24752822875523042,
+    "max": 0.3870525166487495
+  },
+  "coordinate_extents_m": {
+    "x": 0.06856516,
+    "y": 0.063302926823,
+    "z": 0.00022212547669999997
+  },
+  "floor_segments": 0,
+  "warnings": [
+    "Viscous stress only; SST Reynolds stresses are not included in exported varshear.",
+    "Steady snapshots do not reconstruct transient trajectories or full-cycle haemolysis.",
+    "Mesh convergence, boundary-layer resolution, mass balance and physiological validation require solver data.",
+    "Coefficient-range diagnostics are extrapolation flags, not evidence of biological validity.",
+    "Weights are inlet SPEED proxies; equal represented area and normal flow are unverified.",
+    "No outlet plane: all-export averages include potentially incomplete paths; not verified device HI.",
+    "Expected 1000 seeds; reconstructed 969 paths. Missing release flux is unknown; count difference is not a recirculation measurement."
+  ],
+  "metrics": {
+    "GW_HI2_percent": 4.2083241471841946e-06,
+    "GW_HI3_percent": 7.322560878443952e-06,
+    "GW_HI2_exact_percent": 4.230159921622424e-06,
+    "GW_time_fraction_tau_above_fit": 0.0,
+    "GW_transit_above_fit": 0.0,
+    "HO_HI2_percent": 1.6076096424402444e-07,
+    "HO_HI3_percent": 2.5307717420992685e-07,
+    "HO_HI2_exact_percent": 1.6213872926536056e-07,
+    "HO_time_fraction_tau_above_fit": 0.0,
+    "HO_transit_above_fit": 0.0,
+    "TZ_HI2_percent": 1.2547197720734074e-06,
+    "TZ_HI3_percent": 2.5983780993760054e-06,
+    "TZ_HI2_exact_percent": 1.2771148748841563e-06,
+    "TZ_time_fraction_tau_above_fit": 0.0,
+    "TZ_transit_above_fit": 0.0,
+    "TZ_time_fraction_tau_below_50Pa": 1.0,
+    "GW_HI3_no_floor_percent": 7.322560878443952e-06,
+    "GW_HI3_midpoint_percent": 7.2891592746557355e-06,
+    "GW_HI2_reversed_percent": 5.399301993556973e-06,
+    "GW_HI3_stride2_percent": 7.206893857654087e-06,
+    "GW_HI3_stride4_percent": 7.395317377176953e-06,
+    "GW_HI2_NIH_mg_per_100L": 0.4418740354543404,
+    "GW_HI3_NIH_mg_per_100L": 0.7688688922366149,
+    "HO_HI2_NIH_mg_per_100L": 0.016879901245622563,
+    "HO_HI3_NIH_mg_per_100L": 0.026573103292042318,
+    "TZ_HI2_NIH_mg_per_100L": 0.13174557606770776,
+    "TZ_HI3_NIH_mg_per_100L": 0.2728297004344805,
+    "GW_HI3_all_exported_percent": 7.322560878443952e-06,
+    "SA_selected_median_dyne_s_cm2": 0.3372474294557508
+  },
+  "GW_linearized_source_time_quartile_fractions": [
+    0.021659834628042354,
+    0.013404616901334194,
+    0.4760688633816332,
+    0.4888666850889903
+  ],
+  "transit_fraction_of_half_cycle_all_paths": {
+    "min": 0.220559405659371,
+    "p50": 0.3990241806067913,
+    "p90": 0.869767320025762,
+    "p95": 0.9249986830033761,
+    "p99": 0.9901129150209217,
+    "max": 1.548210066594998
+  },
+  "existing_export_subsample_sensitivity_NOT_convergence": [
+    {
+      "fraction": 0.25,
+      "count": 242,
+      "HI3_percent_quantiles": {
+        "min": 5.499856659309579e-06,
+        "p50": 7.27224205522875e-06,
+        "p90": 8.268556900133707e-06,
+        "p95": 8.565122997153285e-06,
+        "p99": 9.092634038386964e-06,
+        "max": 9.216053151008913e-06
+      }
+    },
+    {
+      "fraction": 0.5,
+      "count": 484,
+      "HI3_percent_quantiles": {
+        "min": 6.491542933494647e-06,
+        "p50": 7.240982410889477e-06,
+        "p90": 7.776736134799862e-06,
+        "p95": 7.8127290531616e-06,
+        "p99": 7.997108326786262e-06,
+        "max": 8.069480739365048e-06
+      }
+    }
+  ]
+}
