@@ -625,19 +625,130 @@ def _axis_range(streamline_dfs, col):
     return lo, hi, hi - lo
 
 
-def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=None,
-                         flat_tolerance=1e-3):
+def _fit_streamline_3d_view(fig, ax, spans):
+    """Fit the projected box and its labels inside the reserved plot area."""
+    from itertools import product
+    from matplotlib.transforms import Bbox
+    from mpl_toolkits.mplot3d import proj3d
+
+    corners = np.array(list(product(ax.get_xlim(), ax.get_ylim(), ax.get_zlim())))
+    target = Bbox.from_extents(0.02, 0.035, 0.815, 0.915).transformed(fig.transFigure)
+    zoom = 1.0
+    ax.set_box_aspect(spans, zoom=zoom)
+    fig.canvas.draw()
+    projected = np.column_stack(proj3d.proj_transform(*corners.T, ax.get_proj())[:2])
+    pixels = ax.transData.transform(projected)
+    # Start with space for ticks and labels around the projected geometry.
+    zoom *= min(0.98 * target.width / np.ptp(pixels[:, 0]),
+                0.98 * target.height / np.ptp(pixels[:, 1]))
+    for _ in range(20):
+        ax.set_box_aspect(spans, zoom=zoom)
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
+        projected = np.column_stack(proj3d.proj_transform(*corners.T, ax.get_proj())[:2])
+        pixels = ax.transData.transform(projected)
+        bounds = Bbox.union([
+            Bbox.from_extents(*pixels.min(axis=0), *pixels.max(axis=0)),
+            *(axis.get_tightbbox(renderer)
+              for axis in (ax.xaxis, ax.yaxis, ax.zaxis)),
+            *(axis.label.get_window_extent(renderer)
+              for axis in (ax.xaxis, ax.yaxis, ax.zaxis)),
+        ])
+        # Center the visible box and labels, rather than the empty Axes square.
+        dx = (target.x0 + target.x1 - bounds.x0 - bounds.x1) / (2 * fig.bbox.width)
+        dy = (target.y0 + target.y1 - bounds.y0 - bounds.y1) / (2 * fig.bbox.height)
+        position = ax.get_position(original=True)
+        ax.set_position([position.x0 + dx, position.y0 + dy,
+                         position.width, position.height])
+        if bounds.width <= target.width and bounds.height <= target.height:
+            fig.canvas.draw()
+            break
+        zoom *= 0.98 * min(target.width / bounds.width, target.height / bounds.height)
+
+
+def _select_plot_streamlines(streamline_dfs, max_lines):
+    """Select illustrative, unweighted SA percentiles and two extreme paths."""
+    if max_lines is not None and max_lines < 1:
+        raise ValueError("max_lines must be positive or None (show all).")
+    if max_lines is None or len(streamline_dfs) <= max_lines:
+        return list(range(len(streamline_dfs))), pd.DataFrame({
+            "streamline_index": np.arange(1, len(streamline_dfs) + 1),
+            "selection_reason": "all available paths",
+        })
+
+    metrics = []
+    for df in streamline_dfs:
+        shear = df["shear"].to_numpy()
+        if "dt" in df:
+            dt = df["dt"].to_numpy()
+        elif "t_cumulative" in df:
+            dt = np.diff(df["t_cumulative"].to_numpy(), prepend=0)
+        elif "vel" in df:
+            velocity = df["vel"].to_numpy()
+            mean_velocity = np.mean(velocity[velocity > 0]) if np.any(velocity > 0) else 0.1
+            segment_velocity = np.maximum(0.5 * (velocity[:-1] + velocity[1:]),
+                                          max(mean_velocity * 0.01, 0.001))
+            distance = np.linalg.norm(np.diff(df[["x", "y", "z"]].to_numpy(), axis=0), axis=1)
+            dt = np.r_[0, distance / segment_velocity]
+        else:
+            raise ValueError("Sparse selection needs dt, t_cumulative, or vel; use max_lines=None to show all.")
+        metrics.append((float(np.sum(shear * dt)), float(np.max(shear)), float(np.sum(dt))))
+    metrics = np.asarray(metrics)
+    selected, reasons = [], []
+    # Reserve extremes first, so percentile selection cannot displace them.
+    if max_lines >= 3:
+        for column, reason in [(1, "highest peak shear"), (2, "longest remaining residence time")]:
+            index = next(int(i) for i in np.argsort(-metrics[:, column], kind="stable")
+                         if i not in selected)
+            selected.append(index)
+            reasons.append(reason)
+    count = max_lines - len(selected)
+    quantiles = np.interp(np.linspace(0, 1, count), np.linspace(0, 1, 6),
+                          [0.05, 0.25, 0.50, 0.75, 0.90, 0.95]) if count > 1 else [0.50]
+    for quantile in quantiles:
+        target = np.quantile(metrics[:, 0], quantile)
+        index = next(int(i) for i in np.argsort(np.abs(metrics[:, 0] - target), kind="stable")
+                     if i not in selected)
+        selected.append(index)
+        reasons.append(f"nearest available SA percentile {100 * quantile:g}")
+    records = pd.DataFrame({
+        "streamline_index": np.array(selected) + 1,
+        "selection_reason": reasons,
+        "SA_Pa_s": metrics[selected, 0],
+        "peak_shear_Pa": metrics[selected, 1],
+        "residence_time_s": metrics[selected, 2],
+    })
+    return selected, records
+
+
+def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=250,
+                         flat_tolerance=1e-3, fluid_domain=None,
+                         domain_scale=1.0, domain_opacity=0.06, domain_border=True):
     """
     Plots reconstructed streamlines coloured by local shear stress.
 
     Automatically detects near-planar (2D CFD case) data - where one axis
     has negligible range compared to the other two - and switches to a
     clean 2D plot instead of a distorted 3D one. For genuinely 3D data,
-    keeps proper axis proportions (equal aspect box) so the geometry
-    isn't stretched.
+    keeps proper axis proportions, sizes the canvas to the projected geometry,
+    and fits the camera framing with space for axis labels.
+    By default displays up to 250 illustrative paths spanning unweighted SA
+    percentiles, a peak-shear extreme and a long-residence example. These are not
+    flow-weighted population statistics. Use max_lines=None to display all.
+    A selection CSV beside the saved plot records the one-based input indices.
+    fluid_domain optionally accepts a STEP/STP path or a loaded FluidDomainMesh.
+    CAD coordinates must share the CFD origin; STEP units are converted to metres.
     """
     from matplotlib.collections import LineCollection
-    from mpl_toolkits.mplot3d.art3d import Line3DCollection
+    from mpl_toolkits.mplot3d.art3d import Line3DCollection, Poly3DCollection
+
+    domain = None
+    if fluid_domain is not None:
+        from fluid_domain import FluidDomainMesh, load_fluid_domain
+        if not np.isfinite(domain_opacity) or not 0 <= domain_opacity <= 1:
+            raise ValueError("Domain opacity must be between 0 and 1.")
+        domain = (fluid_domain if isinstance(fluid_domain, FluidDomainMesh)
+                  else load_fluid_domain(fluid_domain, scale=domain_scale))
 
     x_lo, x_hi, x_range = _axis_range(streamline_dfs, "x")
     y_lo, y_hi, y_range = _axis_range(streamline_dfs, "y")
@@ -654,7 +765,8 @@ def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=None,
     cmap = plt.get_cmap("turbo")
     norm = LogNorm(vmin=vmin, vmax=vmax)  # ← use LogNorm instead of Normalize
 
-    dfs = streamline_dfs if max_lines is None else streamline_dfs[:max_lines]
+    selected_indices, selection = _select_plot_streamlines(streamline_dfs, max_lines)
+    dfs = [streamline_dfs[i] for i in selected_indices]
     in_plane_scale = max(x_range, y_range, 1e-12)
 
     # A "2D case" is one where the out-of-plane axis barely varies compared
@@ -662,7 +774,8 @@ def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=None,
     is_flat_z = z_range < flat_tolerance * in_plane_scale
     is_flat_y = y_range < flat_tolerance * max(x_range, z_range, 1e-12)
 
-    if is_flat_z or is_flat_y:
+    render_2d = (is_flat_z or is_flat_y) and domain is None
+    if render_2d:
         # --- 2D rendering ---
         if is_flat_z:
             xa, ya, xlabel, ylabel = "x", "y", "X [m]", "Y [m]"
@@ -675,11 +788,11 @@ def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=None,
             shear = df["shear"].to_numpy()
             segs = np.stack([pts[:-1], pts[1:]], axis=1)
             seg_colors = cmap(norm(0.5 * (shear[:-1] + shear[1:])))
-            lc = LineCollection(segs, colors=seg_colors, linewidth=1.4)
+            lc = LineCollection(segs, colors=seg_colors, linewidth=1.7, alpha=0.4)
             ax.add_collection(lc)
 
-        ax.set_xlim(min(df[xa].min() for df in dfs), max(df[xa].max() for df in dfs))
-        ax.set_ylim(min(df[ya].min() for df in dfs), max(df[ya].max() for df in dfs))
+        ax.set_xlim(min(df[xa].min() for df in streamline_dfs), max(df[xa].max() for df in streamline_dfs))
+        ax.set_ylim(min(df[ya].min() for df in streamline_dfs), max(df[ya].max() for df in streamline_dfs))
         ax.set_aspect("equal", adjustable="box")
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
@@ -693,37 +806,97 @@ def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=None,
 
     else:
         # --- genuine 3D rendering, with real proportions preserved ---
-        fig = plt.figure(figsize=(10, 7))
+        fig = plt.figure(figsize=(10, 8))
         ax = fig.add_subplot(111, projection="3d")
+        if domain is not None:
+            # Draw the faint shell first and keep the coloured paths visible.
+            ax.computed_zorder = False
+            domain_vertices = domain.vertices[:, [0, 2, 1]].copy()
+            domain_vertices[:, 1] *= -1
+            shell = Poly3DCollection(domain_vertices[domain.triangles],
+                                     facecolors="#9caeb8", edgecolors="none",
+                                     alpha=domain_opacity, zorder=1)
+            ax.add_collection3d(shell)
+            if domain_border and len(domain.border_segments):
+                border = domain.border_segments[:, :, [0, 2, 1]].copy()
+                border[:, :, 1] *= -1
+                ax.add_collection3d(Line3DCollection(border, colors="#455a64",
+                                                     linewidth=0.7, alpha=0.45, zorder=2))
+
+        all_pts = []
 
         for df in dfs:
             pts = df[["x", "y", "z"]].to_numpy()
+            # +90 degrees about X: (x, y, z) -> (x, -z, y)
+            pts = np.column_stack((pts[:, 0], -pts[:, 2], pts[:, 1]))
+            all_pts.append(pts)
+
             shear = df["shear"].to_numpy()
             segs = np.stack([pts[:-1], pts[1:]], axis=1)
             seg_colors = cmap(norm(0.5 * (shear[:-1] + shear[1:])))
-            lc = Line3DCollection(segs, colors=seg_colors, linewidth=1.2)
+            lc = Line3DCollection(segs, colors=seg_colors, linewidth=1.7, alpha=0.4, zorder=3)
             ax.add_collection3d(lc)
 
-        ax.set_xlim(x_lo, x_hi)
-        ax.set_ylim(y_lo, y_hi)
-        ax.set_zlim(z_lo, z_hi)
-        # Preserve true relative proportions instead of stretching to a cube -
-        # this is what prevents the "distorted box" artifact.
-        ax.set_box_aspect((max(x_range, 1e-9), max(y_range, 1e-9), max(z_range, 1e-9)))
+        # --- Fit axes to the ROTATED geometry ---
+        if not all_pts:
+            return fig                                       # (2) guard empty case
 
+        # Retain the full-data envelope even when displaying only selected paths.
+        y_lo, y_hi, z_lo, z_hi = -z_hi, -z_lo, y_lo, y_hi
+        if domain is not None:
+            lo = np.minimum([x_lo, y_lo, z_lo], domain_vertices.min(axis=0))
+            hi = np.maximum([x_hi, y_hi, z_hi], domain_vertices.max(axis=0))
+            x_lo, y_lo, z_lo = lo
+            x_hi, y_hi, z_hi = hi
+        x_range, y_range, z_range = x_hi - x_lo, y_hi - y_lo, z_hi - z_lo
+
+        pad = 0.02 * max(x_range, y_range, z_range, 1e-9)
+        ax.set_xlim(x_lo - pad, x_hi + pad)
+        ax.set_ylim(y_lo - pad, y_hi + pad)
+        ax.set_zlim(z_lo - pad, z_hi + pad)
+
+        # Equal scale in data space, including the padding on every axis.
+        spans = np.array([x_range, y_range, z_range]) + 2 * pad
+        ax.set_proj_type("ortho")
+        ax.view_init(elev=15, azim=-80)
+
+        # Project the box onto the camera's right/up vectors to choose a canvas.
+        elev, azim = np.deg2rad([ax.elev, ax.azim])
+        right = np.array([-np.sin(azim), np.cos(azim), 0.0])
+        up = np.array([-np.sin(elev) * np.cos(azim),
+                       -np.sin(elev) * np.sin(azim), np.cos(elev)])
+        projected_ratio = np.dot(np.abs(right), spans) / np.dot(np.abs(up), spans)
+        fig.set_size_inches(9, np.clip(7.1 / projected_ratio + 0.8, 4.5, 9))
+        ax.set_position([0.02, 0.035, 0.795, 0.88])
+
+        from matplotlib.ticker import MaxNLocator
+        for axis in (ax.xaxis, ax.yaxis, ax.zaxis):
+            axis.set_major_locator(MaxNLocator(nbins=4))
+        ax.set_xlabel("X [m]", labelpad=6, fontsize=11)
+        ax.set_ylabel("Y [m]", labelpad=6, fontsize=11)
+        ax.set_zlabel("Z [m]", labelpad=6, fontsize=11)
+        fig.suptitle("Reconstructed streamlines coloured by local shear stress",
+                     y=0.975, fontsize=12)
+
+        # Reserve a separate strip so the colorbar cannot shift the camera.
+        cax = fig.add_axes([0.85, 0.25, 0.025, 0.5])
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
         sm.set_array([])
-        cbar = fig.colorbar(sm, ax=ax, shrink=0.6, pad=0.1)
+        cbar = fig.colorbar(sm, cax=cax)
         cbar.set_label("Local shear stress [Pa]")
 
-        ax.set_xlabel("X [m]")
-        ax.set_ylabel("Y [m]")
-        ax.set_zlabel("Z [m]")
-        ax.set_title("Reconstructed streamlines coloured by local shear stress")
+        _fit_streamline_3d_view(fig, ax, spans)
 
-    plt.tight_layout()
+    if render_2d:
+        plt.tight_layout()
+    fig.streamline_selection = selection
     if save_path:
-        plt.savefig(save_path, dpi=150)
+        fig.savefig(save_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
+        plot_path = Path(save_path)
+        selection_stem = plot_path.stem.replace("streamlines_3d_", "streamline_selection_", 1)
+        if selection_stem == plot_path.stem:
+            selection_stem += "_selection"
+        selection.to_csv(plot_path.with_name(selection_stem + ".csv"), index=False)
     return fig
 
 
@@ -914,15 +1087,32 @@ def print_summary(result):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    import sys
+    import argparse
 
-    if len(sys.argv) < 2:
-        print("Usage: python hemolysis_pipeline.py <export.csv> [--compare-constants]")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Analyse CFD streamlines and generate figures.")
+    parser.add_argument("filepath", type=Path, help="CFD-Post export CSV")
+    parser.add_argument("--compare-constants", action="store_true")
+    parser.add_argument("--fluid-domain", type=Path, help="Optional STEP/STP fluid-domain model")
+    parser.add_argument("--domain-scale", type=float, default=1.0,
+                        help="Extra CAD scale factor after conversion to metres (default: 1)")
+    parser.add_argument("--domain-opacity", type=float, default=0.06,
+                        help="Fluid-domain surface opacity from 0 to 1 (default: 0.06)")
+    parser.add_argument("--no-domain-border", action="store_true", help="Hide CAD edge outlines")
+    args = parser.parse_args()
+    if not np.isfinite(args.domain_opacity) or not 0 <= args.domain_opacity <= 1:
+        parser.error("--domain-opacity must be between 0 and 1")
+    if not np.isfinite(args.domain_scale) or args.domain_scale <= 0:
+        parser.error("--domain-scale must be finite and positive")
+    domain_mesh = None
+    if args.fluid_domain:
+        from fluid_domain import load_fluid_domain
+        try:
+            domain_mesh = load_fluid_domain(args.fluid_domain, args.domain_scale)
+        except Exception as exc:
+            parser.error(f"Cannot load fluid domain: {exc}")
+    filepath = args.filepath
 
-    filepath = sys.argv[1]
-
-    if "--compare-constants" in sys.argv:
+    if args.compare_constants:
         # Sweep GW/HO/TZ constants and print a comparison table; use the
         # active-default set's result (GW) for the plots/CSV below.
         all_results, comparison = run_pipeline_all_constants(filepath)
@@ -948,12 +1138,15 @@ if __name__ == "__main__":
 
         output_paths = {
             "streamlines": OUTPUT_DIR / f"streamlines_3d_{run_id}.png",
+            "selection":   OUTPUT_DIR / f"streamline_selection_{run_id}.csv",
             "shear":       OUTPUT_DIR / f"shear_vs_time_{run_id}.png",
             "histogram":   OUTPUT_DIR / f"hi_histogram_{run_id}.png",
             "sa_pdf":      OUTPUT_DIR / f"sa_pdf_{run_id}.png",
             "summary":     OUTPUT_DIR / f"streamline_summary_{run_id}.csv",
         }
-        plot_streamlines_3d(result["streamlines"], save_path=output_paths["streamlines"])
+        plot_streamlines_3d(result["streamlines"], save_path=output_paths["streamlines"],
+                            fluid_domain=domain_mesh, domain_opacity=args.domain_opacity,
+                            domain_border=not args.no_domain_border)
         plot_shear_vs_time(result["streamlines"], save_path=output_paths["shear"])
         plot_hi_histogram(result["summary"], save_path=output_paths["histogram"])
         plot_sa_pdf(result["summary"], save_path=output_paths["sa_pdf"], label="This device")

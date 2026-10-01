@@ -1,0 +1,2 @@
+# Optional dependency; needed only for STEP/STP fluid-domain overlays.
+gmsh>=4.13,<5
