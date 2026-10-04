@@ -1,2 +1,4 @@
 # this file is too damn big 
 export_100k.csv
+sweeps/sweep_N10000.csv
+sweeps/sweep_N30000.csv
