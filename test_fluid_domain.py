@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from fluid_domain import FluidDomainMesh, load_fluid_domain
+from fluid_domain import (FluidDomainMesh, load_fluid_domain, camera_border_collection,
+                          domain_surface_collection)
 from haem5 import plot_streamlines_3d
 
 try:
@@ -21,6 +22,47 @@ except (ImportError, OSError):
 class DomainTests(unittest.TestCase):
     def tearDown(self):
         plt.close("all")
+
+    def test_camera_contours_follow_view_and_ignore_face_winding(self):
+        vertices = np.array([[1., 0, 0], [-1., 0, 0], [0, 1., 0],
+                             [0, -1., 0], [0, 0, 1.], [0, 0, -1.]])
+        triangles = np.array([[4, 0, 2], [4, 2, 1], [4, 1, 3], [4, 3, 0],
+                              [5, 2, 0], [5, 1, 2], [5, 3, 1], [5, 0, 3]])
+        fig = plt.figure()
+        ax = fig.add_subplot(projection="3d")
+        ax.set_proj_type("ortho")
+        empty = np.empty((0, 2, 3))
+        border = camera_border_collection(vertices, triangles, empty)
+        reversed_border = camera_border_collection(vertices, triangles[:, ::-1], empty)
+        ax.add_collection3d(border, autolim=False)
+        ax.add_collection3d(reversed_border, autolim=False)
+        ax.view_init(elev=20, azim=30)
+        fig.canvas.draw()
+        first = border._segments3d.copy()
+        self.assertGreater(len(first), 0)
+        self.assertLess(len(first), 12)  # Interior tessellation edges stay hidden.
+        np.testing.assert_allclose(first, reversed_border._segments3d)
+        ax.view_init(elev=20, azim=140)
+        fig.canvas.draw()
+        self.assertFalse(np.array_equal(first, border._segments3d))
+
+    def test_shading_is_finite_preserves_opacity_and_tracks_camera(self):
+        vertices = np.array([[0., 0, 0], [1., 0, 0], [0, 1., 0], [0, 0, 1.]])
+        triangles = np.array([[0, 1, 2], [0, 1, 3]])
+        for mode in ("matte", "glossy"):
+            fig = plt.figure()
+            ax = fig.add_subplot(projection="3d")
+            shell = domain_surface_collection(vertices, triangles, shading=mode, alpha=0.18)
+            ax.add_collection3d(shell)
+            fig.canvas.draw()
+            colors = np.array(shell.get_facecolor())
+            self.assertTrue(np.isfinite(colors).all())
+            np.testing.assert_allclose(colors[:, 3], 0.18)
+            ax.view_init(elev=60, azim=120)
+            fig.canvas.draw()
+            self.assertFalse(np.allclose(colors, shell.get_facecolor()))
+        with self.assertRaises(ValueError):
+            domain_surface_collection(vertices, triangles, shading="invalid")
 
     def test_overlay_rotates_border_and_frames_full_domain(self):
         vertices = np.array([[0., 0., 0.], [4., 0., 0.], [0., 5., 0.], [0., 0., 6.]])

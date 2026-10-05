@@ -13,6 +13,76 @@ class FluidDomainMesh:
     border_segments: np.ndarray
 
 
+def camera_border_collection(vertices, triangles, cad_segments, **style):
+    """Combine CAD curves with tessellated apparent contours on every draw.
+
+    Adjacent faces form a silhouette when their opposite corners project to
+    the same side of their shared edge. This also tolerates reversed CAD face
+    winding. Contours remain visible through the translucent shell.
+    """
+    from mpl_toolkits.mplot3d.art3d import Line3DCollection
+    from mpl_toolkits.mplot3d.proj3d import proj_transform
+
+    adjacency = {}
+    for a, b, c in triangles:
+        for u, v, opposite in ((a, b, c), (b, c, a), (c, a, b)):
+            adjacency.setdefault(tuple(sorted((u, v))), []).append(opposite)
+    pairs = [(u, v, corners[0], corners[1])
+             for (u, v), corners in adjacency.items() if len(corners) == 2]
+    pairs = np.asarray(pairs, dtype=int).reshape(-1, 4)
+
+    class CameraBorders(Line3DCollection):
+        def do_3d_projection(self):
+            if len(pairs):
+                x, y, _ = proj_transform(*vertices.T, self.axes.get_proj())
+                projected = np.column_stack((x, y))
+                a, b, c, d = (projected[pairs[:, i]] for i in range(4))
+                edge = b - a
+                side_c = edge[:, 0] * (c - a)[:, 1] - edge[:, 1] * (c - a)[:, 0]
+                side_d = edge[:, 0] * (d - a)[:, 1] - edge[:, 1] * (d - a)[:, 0]
+                contour = vertices[pairs[side_c * side_d > 0, :2]]
+                self.set_segments(np.concatenate((cad_segments, contour), axis=0))
+            return super().do_3d_projection()
+
+    return CameraBorders(cad_segments, **style)
+
+
+def domain_surface_collection(vertices, triangles, shading="flat", **style):
+    """Camera-lit, two-sided matte or satin shading for a translucent shell."""
+    from matplotlib.colors import to_rgb
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+    if shading not in {"flat", "matte", "glossy"}:
+        raise ValueError("Domain shading must be flat, matte, or glossy.")
+    faces = vertices[triangles]
+    normals = np.cross(faces[:, 1] - faces[:, 0], faces[:, 2] - faces[:, 0])
+    normals /= np.maximum(np.linalg.norm(normals, axis=1, keepdims=True), 1e-30)
+    base = np.array(to_rgb("#9caeb8"))
+
+    class LitSurface(Poly3DCollection):
+        def do_3d_projection(self):
+            if shading != "flat":
+                elev, azim = np.deg2rad([self.axes.elev, self.axes.azim])
+                view = np.array([np.cos(elev) * np.cos(azim),
+                                 np.cos(elev) * np.sin(azim), np.sin(elev)])
+                right = np.array([-np.sin(azim), np.cos(azim), 0.])
+                up = np.cross(view, right)
+                light = view - 0.6 * right + 0.8 * up
+                light /= np.linalg.norm(light)
+                facing = normals * np.where(normals @ view >= 0, 1., -1.)[:, None]
+                diffuse = np.maximum(facing @ light, 0)
+                colors = base * (0.3 + 0.7 * diffuse[:, None])
+                if shading == "glossy":
+                    halfway = light + view
+                    halfway /= np.linalg.norm(halfway)
+                    shine = 0.25 * np.maximum(facing @ halfway, 0) ** 24
+                    colors += shine[:, None]
+                self.set_facecolor(np.clip(colors, 0, 1))
+            return super().do_3d_projection()
+
+    return LitSurface(faces, facecolors=base, edgecolors="none", **style)
+
+
 def load_fluid_domain(path, scale=1.0):
     """Read STEP/STP into metres, preserving CAD curves as outline segments."""
     path = Path(path)

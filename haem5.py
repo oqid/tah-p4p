@@ -113,8 +113,8 @@ SA_LITERATURE_MEDIANS = {
 }
 
 # Set to False to run the analysis without writing plots or summary CSV files.
-GENERATE_OUTPUTS = False
-OUTPUT_DIR = Path("outputs")
+GENERATE_OUTPUTS = True
+OUTPUT_DIR = Path("outputs_stp")
 
 
 # ---------------------------------------------------------------------------
@@ -723,7 +723,8 @@ def _select_plot_streamlines(streamline_dfs, max_lines):
 
 def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=250,
                          flat_tolerance=1e-3, fluid_domain=None,
-                         domain_scale=1.0, domain_opacity=0.06, domain_border=True):
+                         domain_scale=1.0, domain_opacity=0.06, domain_border=True,
+                         domain_border_opacity=0.45, domain_shading="flat"):
     """
     Plots reconstructed streamlines coloured by local shear stress.
 
@@ -747,6 +748,8 @@ def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=250,
         from fluid_domain import FluidDomainMesh, load_fluid_domain
         if not np.isfinite(domain_opacity) or not 0 <= domain_opacity <= 1:
             raise ValueError("Domain opacity must be between 0 and 1.")
+        if not np.isfinite(domain_border_opacity) or not 0 <= domain_border_opacity <= 1:
+            raise ValueError("Domain border opacity must be between 0 and 1.")
         domain = (fluid_domain if isinstance(fluid_domain, FluidDomainMesh)
                   else load_fluid_domain(fluid_domain, scale=domain_scale))
 
@@ -813,15 +816,18 @@ def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=250,
             ax.computed_zorder = False
             domain_vertices = domain.vertices[:, [0, 2, 1]].copy()
             domain_vertices[:, 1] *= -1
-            shell = Poly3DCollection(domain_vertices[domain.triangles],
-                                     facecolors="#9caeb8", edgecolors="none",
-                                     alpha=domain_opacity, zorder=1)
+            from fluid_domain import domain_surface_collection
+            shell = domain_surface_collection(domain_vertices, domain.triangles,
+                                              shading=domain_shading,
+                                              alpha=domain_opacity, zorder=1)
             ax.add_collection3d(shell)
-            if domain_border and len(domain.border_segments):
+            if domain_border:
+                from fluid_domain import camera_border_collection
                 border = domain.border_segments[:, :, [0, 2, 1]].copy()
                 border[:, :, 1] *= -1
-                ax.add_collection3d(Line3DCollection(border, colors="#455a64",
-                                                     linewidth=0.7, alpha=0.45, zorder=2))
+                ax.add_collection3d(camera_border_collection(
+                    domain_vertices, domain.triangles, border, colors="#455a64",
+                    linewidth=0.7, alpha=domain_border_opacity, zorder=2), autolim=False)
 
         all_pts = []
 
@@ -1098,9 +1104,15 @@ if __name__ == "__main__":
     parser.add_argument("--domain-opacity", type=float, default=0.06,
                         help="Fluid-domain surface opacity from 0 to 1 (default: 0.06)")
     parser.add_argument("--no-domain-border", action="store_true", help="Hide CAD edge outlines")
+    parser.add_argument("--domain-border-opacity", type=float, default=0.45,
+                        help="CAD and silhouette line opacity from 0 to 1 (default: 0.45)")
+    parser.add_argument("--domain-shading", choices=["flat", "matte", "glossy"], default="flat",
+                        help="Shell lighting: flat colour, soft matte, or subtle shine")
     args = parser.parse_args()
     if not np.isfinite(args.domain_opacity) or not 0 <= args.domain_opacity <= 1:
         parser.error("--domain-opacity must be between 0 and 1")
+    if not np.isfinite(args.domain_border_opacity) or not 0 <= args.domain_border_opacity <= 1:
+        parser.error("--domain-border-opacity must be between 0 and 1")
     if not np.isfinite(args.domain_scale) or args.domain_scale <= 0:
         parser.error("--domain-scale must be finite and positive")
     domain_mesh = None
@@ -1146,7 +1158,9 @@ if __name__ == "__main__":
         }
         plot_streamlines_3d(result["streamlines"], save_path=output_paths["streamlines"],
                             fluid_domain=domain_mesh, domain_opacity=args.domain_opacity,
-                            domain_border=not args.no_domain_border)
+                            domain_border=not args.no_domain_border,
+                            domain_border_opacity=args.domain_border_opacity,
+                            domain_shading=args.domain_shading)
         plot_shear_vs_time(result["streamlines"], save_path=output_paths["shear"])
         plot_hi_histogram(result["summary"], save_path=output_paths["histogram"])
         plot_sa_pdf(result["summary"], save_path=output_paths["sa_pdf"], label="This device")
