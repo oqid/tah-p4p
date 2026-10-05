@@ -5,11 +5,12 @@ Purpose
 -------
 This companion analysis does NOT alter the Taskin/Giersiepen hemolysis model.
 It adds a separate screening check against the empirical stress-exposure damage
-boundaries reproduced as Fig. 26 in US Patent 5,924,975 from NIH/NHLBI guidance.
+boundaries in Fig. 3.6 of the NIH/NHLBI Guidelines for Blood-Material Interactions
+(printed p. 78 / PDF p. 87), also reproduced as patent Fig. 26.
 
 Why separate?
 -------------
-Taskin et al. use a continuous power-law model (HI = C t^alpha tau^beta) and
+Taskin et al. use a continuous power-law model (HI = C tau^alpha t^beta) and
 Lagrangian accumulation variants. Those equations encode stress and exposure-time
 dependence but do not impose a hard zero-damage threshold. Fig. 26 is a different
 kind of criterion: a stress-duration boundary. Keeping it separate avoids mixing
@@ -20,7 +21,7 @@ Method for time-varying CFD streamlines
 The Fig. 26 boundary is for stress magnitude versus duration. For a streamline
 whose stress varies with time, comparing local stress to *cumulative time since
 inlet* is not physically equivalent to a sustained exposure. Instead, this script
-constructs a conservative stress-duration exposure envelope:
+constructs a longest-contiguous stress-duration exposure envelope:
 
     For each stress level S, find the longest CONTIGUOUS duration for which
     local shear stress >= S.
@@ -28,7 +29,9 @@ constructs a conservative stress-duration exposure envelope:
 This produces a per-streamline exposure envelope (duration, stress). The envelope
 is compared with the empirical RBC and platelet damage curves. A utilization
 ratio > 1 means the exposure envelope crosses the corresponding empirical damage
-boundary.
+boundary. This is a screening construction, not a validated variable-stress
+damage model: it treats qualifying intervals as sustained stress S and ignores
+separated repeated exposures. It is not guaranteed to bound biological damage.
 
 Outputs
 -------
@@ -45,11 +48,10 @@ Outputs
 
 Important source caveat
 -----------------------
-The patent reproduces Fig. 26 from NIH Publication 85-2185 and gives several
-numerical anchors in its text, but it does not tabulate the full curves. The
-curve arrays below are therefore APPROXIMATE digitizations/anchors intended for
-engineering screening, not a replacement for the original NIH dataset. Keep this
-qualification in the report.
+The curves are approximate manual traces of the supplied NIH scan, not original
+experimental measurements. See papers/figure_3_6_digitization.md. The Guidelines
+describe significant lysis and also note activation/sublytic effects below these
+boundaries. Comparisons outside the traced time range are left unassessed.
 """
 
 from __future__ import annotations
@@ -66,35 +68,18 @@ import haem5
 
 
 # ---------------------------------------------------------------------------
-# 1. Empirical threshold curves from Fig. 26 / accompanying patent text
+# 1. Approximate lysis curves traced from NIH Fig. 3.6
 # ---------------------------------------------------------------------------
 # Units used internally here: seconds and Pa.
 # 1 dyne/cm^2 = 0.1 Pa.
 #
-# RBC anchors: approximate digitization of the solid "RED CELLS" curve, with
-# the long-duration floor kept at ~150 Pa to match the patent's stated
-# ~1500 dyne/cm^2 threshold (the patent later also describes ~2000 dyne/cm^2
-# as a long-duration critical value; the figure/text are approximate).
-RBC_THRESHOLD = pd.DataFrame({
-    "time_s": np.array([1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4,
-                         1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1,
-                         1.0, 3.0, 10.0, 100.0]),
-    "stress_Pa": np.array([6000, 4200, 2600, 1600, 950, 600,
-                            380, 270, 210, 175, 155, 150,
-                            150, 150, 150, 150], dtype=float),
-})
-
-# Platelet anchors: approximate digitization of the dashed "PLATELETS" curve.
-# The 3 s, 35 Pa point is explicitly stated in the patent text
-# (350 dyne/cm^2 at 3 seconds).
-PLATELET_THRESHOLD = pd.DataFrame({
-    "time_s": np.array([1e-6, 3e-6, 1e-5, 3e-5, 1e-4, 3e-4,
-                         1e-3, 3e-3, 1e-2, 3e-2, 1e-1, 3e-1,
-                         1.0, 3.0, 10.0, 30.0, 100.0]),
-    "stress_Pa": np.array([100000, 60000, 30000, 17000, 9000, 5200,
-                            3000, 1700, 900, 500, 220, 110,
-                            55, 35, 24, 19, 17], dtype=float),
-})
+# Use the primary-source trace rather than historical patent anchors.
+# Calibration and limitations are recorded beside the source PDF.
+_TRACE = pd.read_csv(Path(__file__).resolve().parent / "papers" / "figure_3_6_digitization.csv")
+_TRACE["time_s"] = 10.0 ** (-6 + 8 * (_TRACE["x_px"] - 320) / 488)
+_TRACE["stress_Pa"] = 0.1 * 10.0 ** (6 - 4 * (_TRACE["y_px"] - 268) / 471)
+RBC_THRESHOLD = _TRACE.loc[_TRACE["cell_type"] == "RBC", ["time_s", "stress_Pa"]].reset_index(drop=True)
+PLATELET_THRESHOLD = _TRACE.loc[_TRACE["cell_type"] == "Platelet", ["time_s", "stress_Pa"]].reset_index(drop=True)
 
 CURVES = {
     "RBC": RBC_THRESHOLD,
@@ -105,13 +90,14 @@ CURVES = {
 def _log_interp_threshold(time_s: np.ndarray | float, curve: pd.DataFrame) -> np.ndarray:
     """Log-log interpolate critical stress at exposure duration time_s."""
     t = np.asarray(time_s, dtype=float)
+    valid = (t >= curve["time_s"].iloc[0]) & (t <= curve["time_s"].iloc[-1])
     t_safe = np.clip(t, curve["time_s"].iloc[0], curve["time_s"].iloc[-1])
     log_tau = np.interp(
         np.log10(t_safe),
         np.log10(curve["time_s"].to_numpy()),
         np.log10(curve["stress_Pa"].to_numpy()),
     )
-    return 10.0 ** log_tau
+    return np.where(valid, 10.0 ** log_tau, np.nan)
 
 
 def _longest_contiguous_duration_above(stress: np.ndarray, dt: np.ndarray, level: float) -> float:
@@ -167,6 +153,8 @@ def criterion_utilization(envelope: pd.DataFrame, curve: pd.DataFrame) -> tuple[
         return 0.0, np.nan, np.nan
     crit = _log_interp_threshold(envelope["duration_s"].to_numpy(), curve)
     util = envelope["stress_Pa"].to_numpy() / crit
+    if not np.isfinite(util).any():
+        return np.nan, np.nan, np.nan
     i = int(np.nanargmax(util))
     return float(util[i]), float(envelope["stress_Pa"].iloc[i]), float(envelope["duration_s"].iloc[i])
 
@@ -219,17 +207,23 @@ def analyze_empirical_thresholds(result: dict) -> tuple[pd.DataFrame, pd.DataFra
     for label, prefix in [("Red blood cells", "RBC"), ("Platelets", "Platelet")]:
         u = per_line[f"{prefix}_max_utilization"].to_numpy(dtype=float)
         exceed = per_line[f"{prefix}_exceeds"].to_numpy(dtype=bool)
-        max_idx = int(np.nanargmax(u)) if len(u) else 0
+        assessed = np.isfinite(u)
+        max_idx = int(np.nanargmax(u)) if np.any(assessed) else 0
+        maximum = float(np.nanmax(u)) if np.any(assessed) else np.nan
         device_rows.append({
             "criterion": label,
-            "max_utilization": float(np.nanmax(u)) if len(u) else np.nan,
-            "minimum_safety_factor": float(1.0 / np.nanmax(u)) if len(u) and np.nanmax(u) > 0 else np.inf,
+            "max_utilization": maximum,
+            "minimum_safety_factor": float(1.0 / maximum) if maximum > 0 else np.nan,
+            "streamlines_assessed": int(assessed.sum()),
+            "streamlines_unassessed": int((~assessed).sum()),
             "streamlines_exceeding_percent": float(100.0 * np.mean(exceed)) if len(exceed) else np.nan,
             "flow_weighted_exceedance_percent": float(100.0 * np.sum(per_line.loc[exceed, "flow_weight"])) if len(exceed) else np.nan,
             "worst_streamline": int(per_line.iloc[max_idx]["streamline"]) if len(per_line) else np.nan,
             "worst_stress_Pa": float(per_line.iloc[max_idx][f"{prefix}_worst_stress_Pa"]) if len(per_line) else np.nan,
             "worst_contiguous_duration_s": float(per_line.iloc[max_idx][f"{prefix}_worst_duration_s"]) if len(per_line) else np.nan,
-            "status": "EXCEEDS" if np.any(exceed) else "BELOW THRESHOLD",
+            "status": ("EXCEEDS LYSIS REFERENCE" if np.any(exceed) else
+                       "INCOMPLETE COVERAGE" if not np.all(assessed) or not len(u) else
+                       "BELOW LYSIS REFERENCE"),
         })
     device = pd.DataFrame(device_rows)
 
@@ -254,31 +248,47 @@ def analyze_empirical_thresholds(result: dict) -> tuple[pd.DataFrame, pd.DataFra
     return per_line, device, worst_envelope
 
 
-def plot_empirical_thresholds(worst_envelope: pd.DataFrame, save_path: Path | None = None):
-    """Report-ready stress-duration threshold plot."""
-    fig, ax = plt.subplots(figsize=(8.2, 5.6))
+def plot_empirical_thresholds(worst_envelope: pd.DataFrame,
+                              save_path: Path | None = None):
+    """Full-range report plot with exposure duration displayed in milliseconds."""
+    from matplotlib.ticker import LogLocator, LogFormatterMathtext
 
-    ax.loglog(RBC_THRESHOLD["time_s"], RBC_THRESHOLD["stress_Pa"],
-              linewidth=2.2, label="RBC damage boundary (Fig. 26 approx.)")
-    ax.loglog(PLATELET_THRESHOLD["time_s"], PLATELET_THRESHOLD["stress_Pa"],
-              linewidth=2.2, linestyle="--", label="Platelet damage boundary (Fig. 26 approx.)")
-
-    if not worst_envelope.empty:
-        # Envelope is parameterized by stress; sort by duration for clean plotting.
-        p = worst_envelope.sort_values("duration_s")
-        ax.loglog(p["duration_s"], p["stress_Pa"], linewidth=2.4,
-                  label="Worst-case device exposure envelope")
-
-    ax.set_xlabel("Longest contiguous exposure duration [s]")
-    ax.set_ylabel("Scalar shear stress [Pa]")
-    ax.set_title("Empirical stress–exposure screening")
-    ax.grid(True, which="both", alpha=0.25)
-    ax.legend(frameon=False)
-    fig.tight_layout()
-
+    fig, ax = plt.subplots(figsize=(5.4, 3.8), layout="constrained")
+    p = worst_envelope.replace([np.inf, -np.inf], np.nan).dropna()
+    p = p[(p["duration_s"] > 0) & (p["stress_Pa"] > 0)]
+    p = p.sort_values(["duration_s", "stress_Pa"], ascending=[True, False])
+    ax.loglog(RBC_THRESHOLD["time_s"] * 1000, RBC_THRESHOLD["stress_Pa"],
+              color="#bf5548", lw=1.6, label="Red-cell lysis")
+    ax.loglog(PLATELET_THRESHOLD["time_s"] * 1000, PLATELET_THRESHOLD["stress_Pa"],
+              color="#7757a5", lw=1.6, ls="--", label="Platelet lysis")
+    if not p.empty:
+        ax.loglog(p["duration_s"] * 1000, p["stress_Pa"], color="#087f8c", lw=1.8,
+                  label="CFD exposure envelope", zorder=3)
+    ax.set_xlabel("Exposure duration [ms]", fontsize=10)
+    ax.set_ylabel("Shear stress [Pa]", fontsize=10)
+    ax.tick_params(which="both", direction="in", top=True, right=True, labelsize=9)
+    ax.grid(which="major", color="#e1e1e1", lw=0.5)
+    ax.set_axisbelow(True)
+    ax.xaxis.set_major_locator(LogLocator(base=10, numticks=6))
+    ax.yaxis.set_major_locator(LogLocator(base=10, numticks=7))
+    ax.xaxis.set_major_formatter(LogFormatterMathtext())
+    ax.yaxis.set_major_formatter(LogFormatterMathtext())
+    ax.set_xlim(1e-3, 1e5)
+    lowest = min(1., p["stress_Pa"].min() / 2) if not p.empty else 1.
+    ax.set_ylim(10 ** np.floor(np.log10(lowest)), 2e5)
+    ax.legend(loc="upper right", fontsize=8, frameon=True,
+              facecolor="white", edgecolor="none", framealpha=0.95)
     if save_path is not None:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
+        fig.savefig(save_path, dpi=300, bbox_inches="tight", pad_inches=0.03)
     return fig
+
+
+def save_empirical_figures(worst_envelope: pd.DataFrame, base_path: Path):
+    """Save the full-range figure as a PNG report asset."""
+    png = base_path.with_suffix(".png")
+    fig = plot_empirical_thresholds(worst_envelope, png)
+    plt.close(fig)
+    return [png]
 
 
 def print_device_summary(device: pd.DataFrame):
@@ -286,7 +296,7 @@ def print_device_summary(device: pd.DataFrame):
     print("Empirical stress-exposure threshold screening (independent of Taskin HI)")
     print("=" * 82)
     cols = [
-        "criterion", "max_utilization", "minimum_safety_factor",
+        "criterion", "max_utilization", "streamlines_unassessed",
         "streamlines_exceeding_percent", "flow_weighted_exceedance_percent",
         "worst_stress_Pa", "worst_contiguous_duration_s", "status",
     ]
@@ -294,18 +304,21 @@ def print_device_summary(device: pd.DataFrame):
     print("\nInterpretation: utilization = actual stress / empirical critical stress")
     print("  utilization < 1  -> below empirical boundary")
     print("  utilization >= 1 -> boundary crossed")
-    print("NOTE: Fig. 26 curves are approximate digitizations/anchors for screening.")
+    print("NOTE: Approximate NIH Fig. 3.6 traces; screening for lysis, not activation.")
+    print("      Repeated separated exposures are not accumulated by this envelope.")
     print("=" * 82)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Run haem5 plus independent empirical Fig. 26 stress-duration screening."
+        description="Run haem5 plus independent NIH Fig. 3.6 stress-duration lysis screening."
     )
     parser.add_argument("filepath", type=Path, help="CFD-Post Generic export CSV")
     parser.add_argument("--output-dir", type=Path, default=Path("outputs_empirical"))
     parser.add_argument("--no-plot", action="store_true", help="Skip PNG generation")
     args = parser.parse_args()
+    # This command saves figures; it does not need an interactive GUI backend.
+    plt.switch_backend("Agg")
 
     result = haem5.run_pipeline(args.filepath)
     per_line, device, worst_envelope = analyze_empirical_thresholds(result)
@@ -328,8 +341,8 @@ def main():
 
     if not args.no_plot:
         p_plot = args.output_dir / f"empirical_stress_duration_{run_id}.png"
-        plot_empirical_thresholds(worst_envelope, p_plot)
-        print(f"  {p_plot}")
+        for path in save_empirical_figures(worst_envelope, p_plot):
+            print(f"  {path}")
 
 
 if __name__ == "__main__":

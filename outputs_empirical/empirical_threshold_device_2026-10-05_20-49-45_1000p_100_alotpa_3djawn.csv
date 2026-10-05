@@ -1,0 +1,3 @@
+criterion,max_utilization,minimum_safety_factor,streamlines_exceeding_percent,flow_weighted_exceedance_percent,worst_streamline,worst_stress_Pa,worst_contiguous_duration_s,status
+Red blood cells,0.18451389673537727,5.4196459870670965,0.0,0.0,20,39.931529673197694,0.004075551183883481,BELOW THRESHOLD
+Platelets,0.07072023919729771,14.140223666525875,0.0,0.0,20,36.74407892154174,0.005074820398245312,BELOW THRESHOLD

@@ -4,8 +4,8 @@ in the style of the particle-count convergence figure (log-log, one curve per
 model x constant set).
 
 Usage:
-    python plot_sweep.py                                  # HI2 + HI3, GW + HO + TZ
-    python plot_sweep.py --hi HI2 HI3 --constants GW HO   # pick models / constants
+    python sweeps/plot_sweep.py                           # HI2 + HI3, GW + HO + TZ
+    python sweeps/plot_sweep.py --constants GW HO          # omit TZ
     python plot_sweep.py --metric nih                     # plot NIH (mg/100L) instead of HI%
     python plot_sweep.py --x requested                    # x = requested N, not actual streamline count
     python plot_sweep.py --colour --show                  # colour by constant set, open a window
@@ -25,11 +25,12 @@ import pandas as pd
 LINESTYLES = {"HI2": "--", "HI3": ":"}          # paper: HI1 dotted, HI2 dashed
 MARKERS = {"GW": "o", "HO": "s", "TZ": "*"}
 COLOURS = {"GW": "tab:blue", "HO": "tab:orange", "TZ": "tab:green"}
+SWEEP_DIR = Path(__file__).resolve().parent
 
 
 def main():
     ap = argparse.ArgumentParser(description="Plot HI vs number of path lines.")
-    ap.add_argument("csv", type=Path, nargs="?", default=Path("sweep_results.csv"))
+    ap.add_argument("csv", type=Path, nargs="?", default=SWEEP_DIR / "sweep_results.csv")
     ap.add_argument("--hi", nargs="+", default=["HI2", "HI3"], choices=["HI2", "HI3"])
     ap.add_argument("--constants", nargs="+", default=["GW", "HO", "TZ"],
                     choices=["GW", "HO", "TZ"])
@@ -39,9 +40,13 @@ def main():
                     help="x axis: actual streamlines exported (default) or requested N")
     ap.add_argument("--colour", action="store_true", help="colour by constant set")
     ap.add_argument("--linear-y", action="store_true")
-    ap.add_argument("--out", type=Path, default=Path("hi_vs_pathlines.png"))
+    ap.add_argument("--out", type=Path, default=SWEEP_DIR / "hi_vs_pathlines.png")
     ap.add_argument("--show", action="store_true")
     args = ap.parse_args()
+    if not args.show:
+        plt.switch_backend("Agg")
+    if not args.csv.is_file():
+        ap.error(f"Results file does not exist: {args.csv}. Run run_sweep.py first.")
 
     df = pd.read_csv(args.csv)
     xcol = "n_streamlines" if args.x == "streamlines" else "N_requested"
@@ -79,6 +84,7 @@ def main():
     ax.legend(fontsize=9, ncol=3, framealpha=1, edgecolor="black",
               loc="upper center", bbox_to_anchor=(0.5, -0.16))
     fig.tight_layout()
+    args.out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(args.out, dpi=300, bbox_inches="tight")
     print(f"\nSaved {args.out}")
     if args.show:

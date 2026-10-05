@@ -1,5 +1,19 @@
 # tah-p4p
 
+Sweep scripts, input exports, results and plots live in `sweeps/`. From the
+project root, check pending inputs, run missing cases, then plot without TZ:
+
+```powershell
+python sweeps/run_sweep.py --resume --constants GW HO --dry-run
+python sweeps/run_sweep.py --resume --constants GW HO
+python sweeps/plot_sweep.py --constants GW HO
+```
+
+These commands also work from inside `sweeps/` using `python run_sweep.py`
+and `python plot_sweep.py`. Default paths are relative to the scripts, rather
+than the working directory. `sweep_N100000.csv` is included automatically;
+`--resume` preserves existing results and skips completed constant sets.
+
 To overlay a fluid-domain model on the 3D streamline figure:
 
 ```powershell

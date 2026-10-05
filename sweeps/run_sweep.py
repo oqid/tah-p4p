@@ -8,13 +8,12 @@ not need to touch GENERATE_OUTPUTS. The per-file text table from
 haem5.run_pipeline_all_constants is still printed.
 
 Usage:
-    python run_sweep.py "D:/P4P TORTURE/3D Firstsim/3dfirstsim_files/user_files"
-    python run_sweep.py <folder> --constants GW HO          # subset of constants
-    python run_sweep.py <folder> --max-n 3000               # skip the huge files
-    python run_sweep.py <folder> --resume                   # skip finished (N, constant)
+    python sweeps/run_sweep.py --resume --constants GW HO
+    python sweeps/run_sweep.py --dry-run --resume          # list pending inputs
+    python sweeps/run_sweep.py <folder> --max-n 3000        # custom input folder
 
-Put this file in the same folder as haem5.py (or add that folder to PYTHONPATH).
-Output: sweep_results.csv (one row per file per constant set).
+Inputs and default output live beside this script, independent of working directory.
+Output: sweeps/sweep_results.csv (one row per file per constant set).
 """
 
 import argparse
@@ -25,7 +24,9 @@ from pathlib import Path
 
 import pandas as pd
 
-import haem5  # must sit next to this script
+SWEEP_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SWEEP_DIR.parent))
+import haem5
 
 
 def n_from_name(path):
@@ -35,16 +36,21 @@ def n_from_name(path):
 
 def main():
     ap = argparse.ArgumentParser(description="Run haem5 over a particle-count sweep.")
-    ap.add_argument("folder", type=Path, help="folder containing the sweep CSVs")
+    ap.add_argument("folder", type=Path, nargs="?", default=SWEEP_DIR,
+                    help="folder containing the sweep CSVs (default: beside this script)")
     ap.add_argument("--pattern", default="sweep_N*.csv", help="glob (default: sweep_N*.csv)")
     ap.add_argument("--constants", nargs="+", default=["GW", "HO", "TZ"],
                     choices=list(haem5.POWER_LAW_CONSTANTS), help="constant sets to run")
-    ap.add_argument("--out", type=Path, default=Path("sweep_results.csv"))
+    ap.add_argument("--out", type=Path, default=SWEEP_DIR / "sweep_results.csv")
     ap.add_argument("--min-n", type=int, default=None)
     ap.add_argument("--max-n", type=int, default=None)
     ap.add_argument("--resume", action="store_true",
                     help="skip (N, constants) combinations already in --out")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="list inputs and pending constant sets without running or writing")
     args = ap.parse_args()
+    if not args.folder.is_dir():
+        ap.error(f"Input folder does not exist: {args.folder}")
 
     files = []
     for p in args.folder.glob(args.pattern):
@@ -66,6 +72,16 @@ def main():
         prev = pd.read_csv(args.out)
         rows = prev.to_dict("records")
         done = set(zip(prev["N_requested"], prev["constants"]))
+
+    if args.dry_run:
+        print(f"Inputs: {args.folder.resolve()}")
+        print(f"Results: {args.out.resolve()}")
+        for n, path in files:
+            todo = [c for c in args.constants if (n, c) not in done]
+            print(f"N={n}: {path.name} -> {', '.join(todo) if todo else 'already done'}")
+        return
+
+    args.out.parent.mkdir(parents=True, exist_ok=True)
 
     for n, path in files:
         todo = [c for c in args.constants if (n, c) not in done]
@@ -103,6 +119,8 @@ def main():
         pd.DataFrame(rows).to_csv(args.out, index=False)
         print(f"  done in {time.time() - t0:.1f} s, saved {args.out}")
 
+    if not rows:
+        sys.exit("No results were produced; see the failures above.")
     out = pd.DataFrame(rows).sort_values(["constants", "N_requested"])
     print("\n" + "=" * 70)
     print(out[["N_requested", "n_streamlines", "constants", "HI2_percent",
