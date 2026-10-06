@@ -40,6 +40,8 @@ def main():
                     help="x axis: actual streamlines exported (default) or requested N")
     ap.add_argument("--colour", action="store_true", help="colour by constant set")
     ap.add_argument("--linear-y", action="store_true")
+    ap.add_argument("--y-limits", nargs=2, type=float, metavar=("MIN", "MAX"),
+                    help="set y-axis limits, useful for comparing sweep plots")
     ap.add_argument("--out", type=Path, default=SWEEP_DIR / "hi_vs_pathlines.png")
     ap.add_argument("--show", action="store_true")
     args = ap.parse_args()
@@ -78,6 +80,11 @@ def main():
     ax.set_xscale("log")
     if not args.linear_y:
         ax.set_yscale("log")
+    if args.y_limits:
+        ymin, ymax = args.y_limits
+        if ymin <= 0 or ymax <= ymin:
+            ap.error("--y-limits must be positive with MAX greater than MIN")
+        ax.set_ylim(ymin, ymax)
     ax.set_xlabel("number of path lines", fontweight="bold")
     ax.set_ylabel(ylabel, fontweight="bold")
     ax.grid(True, which="major", linestyle=":", alpha=0.5)

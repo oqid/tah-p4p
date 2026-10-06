@@ -474,7 +474,62 @@ def compute_streamline_SA(pts):
     return pts, SA_total_dyne_s_cm2
 
 
-def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
+def compute_flow_metrics(summary, inlet_area_m2=None, stroke_volume_ml=None,
+                         bpm=None, mean_flow_rate_l_min=None):
+    """Estimate snapshot Q from equal-area, normal inlet seeds, or CO from
+    supplied cycle-mean flow / net stroke volume. Coordinates are in metres.
+    Velocity magnitude cannot account for oblique flow or reverse flow.
+    """
+    for name, value in (("inlet_area_m2", inlet_area_m2),
+                        ("stroke_volume_ml", stroke_volume_ml), ("bpm", bpm),
+                        ("mean_flow_rate_l_min", mean_flow_rate_l_min)):
+        if value is not None and (not np.isfinite(value) or value <= 0):
+            raise ValueError(f"{name} must be finite and positive")
+    if stroke_volume_ml is not None and bpm is None:
+        raise ValueError("bpm is required with stroke_volume_ml")
+    if mean_flow_rate_l_min is not None and stroke_volume_ml is not None:
+        raise ValueError("Supply mean flow rate or stroke volume, not both")
+    q = None
+    source = "unavailable (supply inlet area or cycle-mean flow)"
+    if inlet_area_m2 is not None:
+        speeds = summary["mean_inlet_velocity"].to_numpy(dtype=float)
+        if not np.all(np.isfinite(speeds)) or np.any(speeds < 0):
+            raise ValueError("Inlet speeds must be finite and nonnegative")
+        q = float(inlet_area_m2 * speeds.mean())
+        source = "inlet area * mean seed speed (equal-area, normal-flow estimate)"
+    co = None
+    co_source = "unavailable (supply net stroke volume + BPM or cycle-mean flow)"
+    if mean_flow_rate_l_min is not None:
+        co = float(mean_flow_rate_l_min)
+        co_source = "supplied cycle-mean flow"
+        if q is None:
+            q = co / 60000.0
+            source = co_source
+    elif stroke_volume_ml is not None:
+        co = float(stroke_volume_ml * bpm / 1000.0)
+        co_source = "net stroke volume * BPM"
+        if q is None:
+            q = co / 60000.0
+            source = "cycle mean from net stroke volume * BPM"
+    return {"device_volume_flow_rate_m3_s": q,
+            "device_volume_flow_rate_ml_s": None if q is None else q * 1e6,
+            "device_volume_flow_rate_l_min": None if q is None else q * 60000.0,
+            "device_flow_rate_source": source,
+            "device_cardiac_output_l_min": co,
+            "device_cardiac_output_source": co_source}
+
+
+def add_flow_arguments(parser):
+    parser.add_argument("--inlet-area-m2", type=float,
+                        help="Inlet area in m^2; assumes equal-area seeds and normal flow")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--stroke-volume-ml", type=float, help="Net delivered volume per beat in mL")
+    group.add_argument("--mean-flow-rate-l-min", type=float, help="Supplied cycle-mean flow in L/min")
+
+
+def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA, *,
+                 inlet_area_m2=None, stroke_volume_ml=None, bpm=None,
+                 mean_flow_rate_l_min=None):
     """
     Full pipeline: parse -> reconstruct -> compute per-streamline hemolysis
     -> flow-weighted device average -> NIH conversion.
@@ -541,6 +596,8 @@ def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
         "nodes": nodes,
         "streamlines": per_streamline_dfs,
         "summary": summary,
+        **compute_flow_metrics(summary, inlet_area_m2, stroke_volume_ml, bpm,
+                               mean_flow_rate_l_min),
         # Backwards-compatible aliases (old keys -> HI2, the method previously
         # implemented here) - kept so existing scripts/plots don't break.
         "device_HI_percent": device_HI_percent,
@@ -577,7 +634,7 @@ def check_constant_range_coverage(result, constants_name):
     return frac_tau_over, frac_t_over
 
 
-def run_pipeline_all_constants(filepath, constant_names=("GW", "HO", "TZ")):
+def run_pipeline_all_constants(filepath, constant_names=("GW", "HO", "TZ"), **flow_options):
     """
     Runs the full pipeline once per named constant set (see
     POWER_LAW_CONSTANTS) and prints a compact HI2 vs HI3 vs NIH comparison
@@ -593,7 +650,7 @@ def run_pipeline_all_constants(filepath, constant_names=("GW", "HO", "TZ")):
     rows = []
     for name in constant_names:
         c = POWER_LAW_CONSTANTS[name]
-        res = run_pipeline(filepath, A=c["A"], alpha=c["alpha"], beta=c["beta"])
+        res = run_pipeline(filepath, A=c["A"], alpha=c["alpha"], beta=c["beta"], **flow_options)
         all_results[name] = res
         frac_tau_over, frac_t_over = check_constant_range_coverage(res, name)
         rows.append({
@@ -910,8 +967,12 @@ def plot_streamlines_3d(streamline_dfs, save_path=None, max_lines=250,
 
 def plot_shear_vs_time(streamline_dfs, save_path=None, n_lines=8):
     fig, ax = plt.subplots(figsize=(9, 5))
-    for df in streamline_dfs[:n_lines]:
-        ax.plot(df["t_cumulative"], df["shear"], marker="o", markersize=2, alpha=0.8)
+    # Sunset lesbian pride flag colors, replacing white with a lighter orange tint.
+    colors = ["#D52D00", "#EF7627", "#FFB783", "#FF9A56",
+              "#D162A4", "#B55690", "#A30262"]
+    for i, df in enumerate(streamline_dfs[:n_lines]):
+        ax.plot(df["t_cumulative"], df["shear"], color=colors[i % len(colors)],
+                marker="o", markersize=2, alpha=0.95)
     ax.set_xlabel("Cumulative exposure time, t [s]")
     ax.set_ylabel("Local shear stress, τ [Pa]")
     ax.set_title(f"Shear stress vs exposure time (first {n_lines} streamlines)")
@@ -1059,6 +1120,14 @@ def plot_sa_pdf(summary, save_path=None, label=None, threshold=HELLUMS_THRESHOLD
 def print_summary(result):
     print("=" * 60)
     print(f"Streamlines processed:        {len(result['summary'])}")
+    q = result.get("device_volume_flow_rate_m3_s")
+    co = result.get("device_cardiac_output_l_min")
+    if q is not None:
+        print(f"Volume flow rate:             {q:.6e} m^3/s | {q * 1e6:.3f} mL/s | {q * 60000:.3f} L/min")
+    print(f"Flow rate basis:              {result.get('device_flow_rate_source', 'unavailable')}")
+    if co is not None:
+        print(f"Cardiac output:               {co:.3f} L/min")
+    print(f"Cardiac output basis:         {result.get('device_cardiac_output_source', 'unavailable')}")
     # Equal-streamline mean of total segment durations; dt is in seconds.
     mean_transit_ms = np.mean([df["dt"].sum() for df in result["streamlines"]]) * 1000.0
     print(f"Avg total transit time:       {mean_transit_ms:.3f} ms (unweighted)")
@@ -1108,6 +1177,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyse CFD streamlines and generate figures.")
     parser.add_argument("filepath", type=Path, help="CFD-Post export CSV")
     parser.add_argument("--compare-constants", action="store_true")
+    add_flow_arguments(parser)
+    parser.add_argument("--bpm", type=float, help="Beats/min; required with --stroke-volume-ml")
     parser.add_argument("--fluid-domain", type=Path, help="Optional STEP/STP fluid-domain model")
     parser.add_argument("--domain-scale", type=float, default=1.0,
                         help="Extra CAD scale factor after conversion to metres (default: 1)")
@@ -1133,14 +1204,20 @@ if __name__ == "__main__":
         except Exception as exc:
             parser.error(f"Cannot load fluid domain: {exc}")
     filepath = args.filepath
+    flow_options = dict(inlet_area_m2=args.inlet_area_m2, stroke_volume_ml=args.stroke_volume_ml,
+                        bpm=args.bpm, mean_flow_rate_l_min=args.mean_flow_rate_l_min)
+    try:
+        compute_flow_metrics(pd.DataFrame({"mean_inlet_velocity": [0.0]}), **flow_options)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     if args.compare_constants:
         # Sweep GW/HO/TZ constants and print a comparison table; use the
         # active-default set's result (GW) for the plots/CSV below.
-        all_results, comparison = run_pipeline_all_constants(filepath)
+        all_results, comparison = run_pipeline_all_constants(filepath, **flow_options)
         result = all_results[ACTIVE_CONSTANTS]
     else:
-        result = run_pipeline(filepath)
+        result = run_pipeline(filepath, **flow_options)
 
     print_summary(result)
 
@@ -1165,6 +1242,7 @@ if __name__ == "__main__":
             "histogram":   OUTPUT_DIR / f"hi_histogram_{run_id}.png",
             "sa_pdf":      OUTPUT_DIR / f"sa_pdf_{run_id}.png",
             "summary":     OUTPUT_DIR / f"streamline_summary_{run_id}.csv",
+            "device":      OUTPUT_DIR / f"device_summary_{run_id}.csv",
         }
         plot_streamlines_3d(result["streamlines"], save_path=output_paths["streamlines"],
                             fluid_domain=domain_mesh, domain_opacity=args.domain_opacity,
@@ -1176,6 +1254,8 @@ if __name__ == "__main__":
         plot_sa_pdf(result["summary"], save_path=output_paths["sa_pdf"], label="This device")
 
         result["summary"].to_csv(output_paths["summary"], index=False)
+        pd.DataFrame([{k: v for k, v in result.items() if k.startswith("device_")}]).to_csv(
+            output_paths["device"], index=False)
         print("Saved outputs:")
         for output_path in output_paths.values():
             print(f"  {output_path}")

@@ -29,6 +29,24 @@ The core summary now prints the mean, P95, P99 and maximum of per-streamline
 peak stresses, and saves each line's peak and transit time in `streamlines.csv`.
 These are sampled stress peaks, not a sensitization prediction.
 
+Volume flow rate and cardiac output are available in `haem5.py` and the runner:
+
+```powershell
+python run_haem.py export.csv --analyses summary --inlet-area-m2 0.0003 --stroke-volume-ml 50 --bpm 120
+python haem5.py export.csv --mean-flow-rate-l-min 6
+```
+
+`--inlet-area-m2` estimates Q = area × mean inlet seed speed, reported in m³/s,
+mL/s and L/min. This assumes seeds uniformly represent the entire inlet area,
+start at the inlet and follow flow normal to that surface. Scalar speeds cannot
+resolve reverse or oblique flow. A snapshot estimate is not cycle-mean cardiac
+output. Cardiac output uses net delivered `--stroke-volume-ml` × `--bpm` / 1000,
+or a supplied cycle-mean `--mean-flow-rate-l-min`. Chamber capacity alone is not
+net stroke volume. Without inlet area, either cardiac output input also supplies
+cycle-mean Q. Missing quantities are shown as unavailable. Manifest fields are
+`inlet_area_m2`, `stroke_volume_ml`, and `mean_flow_rate_l_min`; the runner saves
+these metrics in `summary.csv`, and haem5 saves them in `device_summary_*.csv`.
+
 Core summary, empirical screening and plots use all reconstructed paths and
 inlet-speed proxy weighting. Diagnostics can select completed paths and use
 supplied flux weights; its report states the population and weighting. Use

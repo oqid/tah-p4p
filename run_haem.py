@@ -39,6 +39,7 @@ def main():
     parser.add_argument("--outdir", type=Path, help="New run folder; existing folders are refused")
     parser.add_argument("--compare-constants", action="store_true", help="Compare GW/HO/TZ in the core analysis")
     parser.add_argument("--bpm", type=float, default=120.)
+    haem5.add_flow_arguments(parser)
     parser.add_argument("--expected-seeds", type=int)
     parser.add_argument("--outlet-plane", nargs=6, type=float)
     parser.add_argument("--outlet-tolerance", type=float, default=1e-4)
@@ -55,6 +56,8 @@ def main():
     if not cases:
         parser.error("Provide exports or --manifest.")
     defaults = {"bpm": args.bpm, "expected_seeds": args.expected_seeds,
+                "inlet_area_m2": args.inlet_area_m2, "stroke_volume_ml": args.stroke_volume_ml,
+                "mean_flow_rate_l_min": args.mean_flow_rate_l_min,
                 "outlet_plane": args.outlet_plane, "outlet_tolerance": args.outlet_tolerance,
                 "flow_model": "SST", "stress_model": "molecular viscosity * scalar shear strain rate"}
     cases = [{**defaults, **case} for case in cases]
@@ -63,6 +66,12 @@ def main():
             parser.error(f"Input does not exist: {case['path']}")
         if not np.isfinite(case["bpm"]) or case["bpm"] <= 0:
             parser.error("BPM must be finite and positive.")
+        try:
+            haem5.compute_flow_metrics(pd.DataFrame({"mean_inlet_velocity": [0.0]}),
+                                       **{k: case[k] for k in ("inlet_area_m2", "stroke_volume_ml",
+                                                              "bpm", "mean_flow_rate_l_min")})
+        except ValueError as exc:
+            parser.error(str(exc))
         if not np.isfinite(case["outlet_tolerance"]) or case["outlet_tolerance"] < 0:
             parser.error("Outlet tolerance must be finite and nonnegative.")
     analyses = set(args.analyses)
@@ -92,12 +101,14 @@ def main():
                     print(f"Input: {path}\nAnalyses: {', '.join(sorted(analyses))}")
                     result = None
                     if analyses & {"summary", "empirical", "plots"}:
+                        flow_options = {k: case[k] for k in ("inlet_area_m2", "stroke_volume_ml",
+                                                            "bpm", "mean_flow_rate_l_min")}
                         if args.compare_constants:
-                            results, comparison = haem5.run_pipeline_all_constants(path)
+                            results, comparison = haem5.run_pipeline_all_constants(path, **flow_options)
                             comparison.to_csv(folder / "constants.csv")
                             result = results[haem5.ACTIVE_CONSTANTS]
                         else:
-                            result = haem5.run_pipeline(path)
+                            result = haem5.run_pipeline(path, **flow_options)
                         result["summary"].to_csv(folder / "streamlines.csv", index=False)
                     if "summary" in analyses:
                         haem5.print_summary(result)

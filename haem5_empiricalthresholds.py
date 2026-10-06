@@ -258,11 +258,11 @@ def plot_empirical_thresholds(worst_envelope: pd.DataFrame,
     p = p[(p["duration_s"] > 0) & (p["stress_Pa"] > 0)]
     p = p.sort_values(["duration_s", "stress_Pa"], ascending=[True, False])
     ax.loglog(RBC_THRESHOLD["time_s"] * 1000, RBC_THRESHOLD["stress_Pa"],
-              color="#bf5548", lw=1.6, label="Red-cell lysis")
+              color="#D989B5", lw=1.6, label="Red-cell lysis")
     ax.loglog(PLATELET_THRESHOLD["time_s"] * 1000, PLATELET_THRESHOLD["stress_Pa"],
-              color="#7757a5", lw=1.6, ls="--", label="Platelet lysis")
+              color="#9B8AC4", lw=1.6, ls="--", label="Platelet lysis")
     if not p.empty:
-        ax.loglog(p["duration_s"] * 1000, p["stress_Pa"], color="#087f8c", lw=1.8,
+        ax.loglog(p["duration_s"] * 1000, p["stress_Pa"], color="#78A9D1", lw=1.8,
                   label="CFD exposure envelope", zorder=3)
     ax.set_xlabel("Exposure duration [ms]", fontsize=10)
     ax.set_ylabel("Shear stress [Pa]", fontsize=10)

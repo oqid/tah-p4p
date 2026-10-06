@@ -1,0 +1,31 @@
+{
+  "analyses": [
+    "diagnostics",
+    "empirical",
+    "plots",
+    "summary"
+  ],
+  "compare_constants": false,
+  "cases": [
+    {
+      "bpm": 120.0,
+      "expected_seeds": null,
+      "outlet_plane": null,
+      "outlet_tolerance": 0.0001,
+      "flow_model": "SST",
+      "stress_model": "molecular viscosity * scalar shear strain rate",
+      "path": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\INPUT_TEST_3D.csv",
+      "sha256": "58e67d4d8e3583005781f97c3bca777484654f244493ab1aa1b2ae1a19be68f2"
+    }
+  ],
+  "command": [
+    "run_haem.py",
+    "z_inputs/INPUT_TEST_3D.csv",
+    "--analyses",
+    "summary",
+    "diagnostics",
+    "empirical",
+    "plots"
+  ],
+  "status": "complete"
+}
