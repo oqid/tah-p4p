@@ -1,5 +1,9 @@
 # this file is too damn big 
 export_100k.csv
-sweeps/sweep_N10000.csv
-sweeps/sweep_N30000.csv
-sweeps/sweep_N100000.csv
+sweep_N10000.csv
+sweep_N30000.csv
+sweep_N100000.csv
+sweep_N300000.csv
+sweep_N1000000.csv
+
+# any sweep_N#.csv

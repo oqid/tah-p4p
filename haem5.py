@@ -499,6 +499,8 @@ def run_pipeline(filepath, A=A_COEF, alpha=ALPHA, beta=BETA):
             # Backwards-compatible alias (old column name -> HI2)
             "HI_percent": HI2_total,
             "SA_dyne_s_cm2": SA_total,
+            "transit_ms": float(df["dt"].sum()) * 1000.0,
+            "max_stress_Pa": float(df["shear"].max()),
             "mean_inlet_velocity": df["vel"].iloc[0],
         })
 
@@ -1057,6 +1059,14 @@ def plot_sa_pdf(summary, save_path=None, label=None, threshold=HELLUMS_THRESHOLD
 def print_summary(result):
     print("=" * 60)
     print(f"Streamlines processed:        {len(result['summary'])}")
+    # Equal-streamline mean of total segment durations; dt is in seconds.
+    mean_transit_ms = np.mean([df["dt"].sum() for df in result["streamlines"]]) * 1000.0
+    print(f"Avg total transit time:       {mean_transit_ms:.3f} ms (unweighted)")
+    peak_stresses = np.array([df["shear"].max() for df in result["streamlines"]])
+    print(f"Path peak stress (mean):     {peak_stresses.mean():.3f} Pa (unweighted)")
+    print(f"Path peak stress (P95/P99):  {np.percentile(peak_stresses, 95):.3f} / "
+          f"{np.percentile(peak_stresses, 99):.3f} Pa (unweighted)")
+    print(f"Path peak stress (max):      {peak_stresses.max():.3f} Pa")
     print(f"Constants used:                A={A_COEF:.4g}  alpha={ALPHA:.4g}  beta={BETA:.4g} "
           f"({ACTIVE_CONSTANTS})")
     print("-" * 60)

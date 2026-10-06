@@ -1,5 +1,47 @@
 # tah-p4p
 
+## Main analysis entry point
+
+Use `run_haem.py` for routine investigations. It groups selected analyses in one
+new folder under `outputs/runs/`, with a README, configuration/status record,
+per-case console logs and combined case tables. Existing run folders are refused.
+
+```powershell
+# Default: printed core summary plus detailed diagnostics; no plots
+python run_haem.py 1000p_100_alotpa_3djawn.csv
+
+# Select extra analyses; plots are opt-in
+python run_haem.py export.csv --analyses summary diagnostics empirical plots
+
+# Named investigation with per-case geometry, phase, BPM, outlet and weights
+python run_haem.py --manifest cases.json --outdir outputs/runs/50cc_vs_35cc
+
+# Quick core summary and GW/HO/TZ comparison
+python run_haem.py export.csv --analyses summary --compare-constants
+```
+
+`--manifest` uses the format documented in [HAEM_DIAGNOSTICS.md](HAEM_DIAGNOSTICS.md).
+You can also pass several export paths. `--bpm`, `--expected-seeds`,
+`--outlet-plane` and `--outlet-tolerance` provide defaults; manifest settings
+override them. BPM is metadata here, not a change to the CFD field.
+
+The core summary now prints the mean, P95, P99 and maximum of per-streamline
+peak stresses, and saves each line's peak and transit time in `streamlines.csv`.
+These are sampled stress peaks, not a sensitization prediction.
+
+Core summary, empirical screening and plots use all reconstructed paths and
+inlet-speed proxy weighting. Diagnostics can select completed paths and use
+supplied flux weights; its report states the population and weighting. Use
+diagnostics results for those controlled comparisons. `summary.csv` and
+`comparison.csv` deliberately distinguish the two populations.
+
+Use the scripts directly for specialist options: `haem5.py` for CAD overlays,
+`haem_diagnostics.py` for numerical audits, `haem5_empiricalthresholds.py` for
+standalone lysis screening and extra figure formats, and `sweeps/` for new-seed
+convergence. `old/` and `haem5_recirculationtest.py` are not part of this runner.
+The runner creates PNGs only when `plots` is selected; it does not duplicate PDF
+variants. No existing scripts, inputs or results are moved.
+
 Sweep scripts, input exports, results and plots live in `sweeps/`. From the
 project root, check pending inputs, run missing cases, then plot without TZ:
 
