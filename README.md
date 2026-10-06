@@ -42,6 +42,18 @@ convergence. `old/` and `haem5_recirculationtest.py` are not part of this runner
 The runner creates PNGs only when `plots` is selected; it does not duplicate PDF
 variants. No existing scripts, inputs or results are moved.
 
+
+| Script | Role |
+|---|---|
+| `haem5.py` | Core haemolysis/SA calculation, summary and plots |
+| `haem_diagnostics.py` | Detailed numerical checks, path selection, weighting and comparison tables |
+| `haem5_empiricalthresholds.py` | Separate empirical lysis screening |
+| **`run_haem.py`** | Calls your selected analyses and groups their outputs and logs |
+
+## Helpers
+
+### Sweep
+
 Sweep scripts, input exports, results and plots live in `sweeps/`. From the
 project root, check pending inputs, run missing cases, then plot without TZ:
 
@@ -55,6 +67,9 @@ These commands also work from inside `sweeps/` using `python run_sweep.py`
 and `python plot_sweep.py`. Default paths are relative to the scripts, rather
 than the working directory. `sweep_N100000.csv` is included automatically;
 `--resume` preserves existing results and skips completed constant sets.
+
+
+### .STP Visualizer for Plots
 
 To overlay a fluid-domain model on the 3D streamline figure:
 
