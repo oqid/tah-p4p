@@ -7,3 +7,5 @@ sweep_N300000.csv
 sweep_N1000000.csv
 
 # any sweep_N#.csv
+/sweeps/segment_sweeps/
+/sweeps/tolerance_sweep/
