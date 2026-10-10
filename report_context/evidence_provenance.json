@@ -1,0 +1,20 @@
+{
+  "source_sha256": {
+    "sweeps/sweep_results.csv": "31e9eb772324ec214995e71279c0ffd494bb3e8d6f1e66a5768e1363c7a31ea7",
+    "sweeps/300k_sweep_results.csv": "497f866e7a7e8df6cb294d01c631f5963b4209692a1acf6fc2777c099dce7aaf",
+    "sweeps/a1to10k_sweep_results.csv": "92b5f00e2b130543fd42db1619650c92111fa197a391e2e00e4b3ce2138e8215",
+    "sweeps/segment_sweeps/segment_sweep_results.csv": "2856363653e9cdbebf4203e11e776dbf01c262e149156388dd9a7e5803098578",
+    "sweeps/tolerance_sweep_results.csv": "23574077a5a55261922663ad01aef8c2f7bc66056c2075cffc122fb51baca571",
+    "outputs/runs/runner_check_2026-10-06/01_1000p_100_alotpa_3djawn/diagnostics/streamlines.csv": "d04f12b72429905dda3f8599b2ca106cd0597784cd386e248880f9af8352b438"
+  },
+  "segment_export_sha256": {
+    "sweep_N5000_S100.csv": "fffa5108426c67999f80980f793c7c5c0fb3be7a251fe003e1b1afe276bd2952",
+    "sweep_N5000_S1000.csv": "d23590ca1960e150fcd5f8d6ff21231d966018479e75e78634de4fee3034a466",
+    "sweep_N5000_S200.csv": "3dcc83ce031d7d6a596ace27060b5775c0dd6b882b75403a53e8dccb240c8161",
+    "sweep_N5000_S2000.csv": "d23590ca1960e150fcd5f8d6ff21231d966018479e75e78634de4fee3034a466",
+    "sweep_N5000_S25.csv": "2e0e0321fc29be71f67ceec099bed9ea9bb7b246dab79f373ddb6790d14b8317",
+    "sweep_N5000_S50.csv": "ad0c7acbe7dc9fd2b4423c34fef385b70f910cf0cb2f9d8272036d3ab6bdd2b2",
+    "sweep_N5000_S500.csv": "51403a29a615474fdd474ca7dbc21e8e4d35a870e035760227ae64ac7cada629",
+    "sweep_N5000_S5000.csv": "d23590ca1960e150fcd5f8d6ff21231d966018479e75e78634de4fee3034a466"
+  }
+}

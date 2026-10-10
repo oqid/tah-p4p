@@ -114,7 +114,7 @@ SA_LITERATURE_MEDIANS = {
 
 # Set to False to run the analysis without writing plots or summary CSV files.
 GENERATE_OUTPUTS = True
-OUTPUT_DIR = Path("outputs_stp")
+OUTPUT_DIR = Path("outputs_oct10")
 
 
 # ---------------------------------------------------------------------------

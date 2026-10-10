@@ -1,0 +1,51 @@
+{
+  "status": "complete",
+  "files": [
+    {
+      "path": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_1667%.csv",
+      "sha256": "64bb9278fb46a973881ba062df07df659db8688d5f3b417687495f1303bfd0e6",
+      "empirical_envelope": "C:\\Users\\kingk\\Documents\\tah-p4p\\outputs_empirical\\empirical_exposure_envelope_2026-10-10_23-03-28_haemline_50cc_1667%.csv",
+      "empirical_sha256": "5fe71cfd40822007e00e34c18af5cecbe0c58007ad72fbdd871bd9f21d92f20e",
+      "empirical_input_match": "User-supplied cache; original input hash unavailable"
+    },
+    {
+      "path": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_3333%.csv",
+      "sha256": "372cb6251cf8da61f46dbfa14ebee57d1381f62f2c3396705bacf8d52e07e685",
+      "empirical_envelope": "C:\\Users\\kingk\\Documents\\tah-p4p\\outputs_empirical\\empirical_exposure_envelope_2026-10-10_23-04-43_haemline_50cc_3333%.csv",
+      "empirical_sha256": "caa99e31228f1c083ec7186b6fb861a1eee08a05c9eed001e64d9e48942c2966",
+      "empirical_input_match": "User-supplied cache; original input hash unavailable"
+    },
+    {
+      "path": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_5000%.csv",
+      "sha256": "c6cea35c25b6fa3729488e6bf09b540743086211f62ec0a61b5e4436d8670e8a",
+      "empirical_envelope": "C:\\Users\\kingk\\Documents\\tah-p4p\\outputs_empirical\\empirical_exposure_envelope_2026-10-10_23-05-58_haemline_50cc_5000%.csv",
+      "empirical_sha256": "57c5bd0750d68932e00731117ad97cddc092cc5c0cb9e89aa1d1a5cfb438f3bf",
+      "empirical_input_match": "User-supplied cache; original input hash unavailable"
+    },
+    {
+      "path": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_6667%.csv",
+      "sha256": "9e3a19cfcd49f6dd9c04e29fd184165aafe7c658c90a0b1bb4a962a699901f37",
+      "empirical_envelope": "C:\\Users\\kingk\\Documents\\tah-p4p\\outputs_empirical\\empirical_exposure_envelope_2026-10-10_23-07-27_haemline_50cc_6667%.csv",
+      "empirical_sha256": "d77d8dec8bd7e132122862f55849d6a82b95c0f62ca0354ac543f5dedf402bb2",
+      "empirical_input_match": "User-supplied cache; original input hash unavailable"
+    },
+    {
+      "path": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_8300%.csv",
+      "sha256": "9c9fcd040db4e86fae3f6b87c68fb3c3a918ef99202bda343a1e733ea656a718",
+      "empirical_envelope": "C:\\Users\\kingk\\Documents\\tah-p4p\\outputs_empirical\\empirical_exposure_envelope_2026-10-10_23-08-56_haemline_50cc_8300%.csv",
+      "empirical_sha256": "d8804fedf63a528829f3a5a0367fca0ea40f3f119d966b916f989e65a6ed40f5",
+      "empirical_input_match": "User-supplied cache; original input hash unavailable"
+    }
+  ],
+  "phases_percent": [
+    16.67,
+    33.33,
+    50.0,
+    66.67,
+    83.0
+  ],
+  "constants": "GW",
+  "points": 400,
+  "population_weighting": "equal path",
+  "HI_weighting": "inlet speed proxy"
+}

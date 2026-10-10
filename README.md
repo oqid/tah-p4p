@@ -104,3 +104,31 @@ model must use the same origin and coordinate axes as the CFD export.
 Use `--domain-opacity 0.1` to adjust surface opacity or `--no-domain-border`
 to hide the outlines. Omitting `--fluid-domain` keeps the usual streamline plot
 and requires no CAD dependency. The overlay does not change the calculations.
+
+## Compare systolic snapshots
+
+Use the separate `haem5_snapshots.py` comparison version to process every CSV in a
+folder, preserving the original `haem5.py` calculations:
+
+```powershell
+python haem5_snapshots.py z_inputs --empirical-dir outputs_empirical
+```
+
+This reuses the newest saved empirical envelope matching each exact input stem.
+Use it when those saved envelopes correspond to the current exports; omit
+`--empirical-dir` to recompute the empirical screening. Outputs go to a new
+timestamped folder in `outputs_snapshots/` (or a new `--output-dir`).
+
+The seven PNG figures show combined SA distributions and tails, all empirical
+exposure envelopes with a detail view, shear-density panels, every raw path at
+low opacity, mean/median shear with the remaining-path fraction, normalized
+transit medians, and haemolysis/SA/peak-stress trends across systole. CSV files
+retain the summaries and interpolation statistics; `run.json` records inputs,
+hashes and completion status.
+
+Filename suffix `1667%` is interpreted as 16.67% of systole. Override phases
+with `--phases 16.67 33.33 50 66.67 83` in natural filename order. Plots compare
+frozen-flow populations, not particles tracked through a transient cycle.
+Distribution plots give each reconstructed path equal weight; HI uses the
+existing inlet-speed weighting. Late-time statistics exclude ended paths, and
+percentile bands show population spread rather than confidence intervals.

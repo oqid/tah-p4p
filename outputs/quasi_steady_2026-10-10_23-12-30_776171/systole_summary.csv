@@ -1,0 +1,2 @@
+HI2_percent,HI3_percent,transit_ms,SA_dyne_s_cm2,max_stress_Pa,SA_fraction_above_threshold,fraction_transit_longer_than_systole,HI2_NIH_mg_per_100L,HI3_NIH_mg_per_100L,systole_ms,n_snapshots,constants,flow_basis,sampling
+3.800884611296938e-05,9.199305269138485e-05,197.4114759763255,0.7974507739305662,4.6824199751967175,0.0,0.21524866958440192,3.9909288418617845,9.659270532595409,250.0,5,GW,relative Q from mean inlet speed; assumes constant inlet area,endpoints

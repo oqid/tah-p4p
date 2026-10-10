@@ -1,0 +1,42 @@
+{
+  "inputs": [
+    "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_1667%.csv",
+    "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_3333%.csv",
+    "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_5000%.csv",
+    "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_6667%.csv",
+    "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_8300%.csv"
+  ],
+  "flow_basis": "relative Q from mean inlet speed; assumes constant inlet area",
+  "sampling": "endpoints",
+  "times_ms": [
+    0.0,
+    62.5,
+    125.0,
+    187.5,
+    250.0
+  ],
+  "represented_ms": [
+    31.25,
+    62.5,
+    62.5,
+    62.5,
+    31.25
+  ],
+  "constants": {
+    "A": 3.62e-05,
+    "alpha": 2.416,
+    "beta": 0.785,
+    "tau_max_Pa": 255.0,
+    "t_max_s": 0.7
+  },
+  "HCT": 0.3,
+  "HB_g_L": 150.0,
+  "SA_threshold_dyne_s_cm2": 35.0,
+  "interpretation": "Volume-weighted frozen-flow path estimates, not transient histories or total damage per beat.",
+  "assumptions": [
+    "Equal-area, forward normal inlet seeding; first path node is inlet.",
+    "All exported paths included; outlet arrival is not verified.",
+    "haem5 minimum-velocity floor and damage models apply.",
+    "SA threshold exceedance is a model exposure statistic, not a clinical probability."
+  ]
+}

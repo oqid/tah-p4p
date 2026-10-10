@@ -1,0 +1,3 @@
+criterion,max_utilization,minimum_safety_factor,streamlines_assessed,streamlines_unassessed,streamlines_exceeding_percent,flow_weighted_exceedance_percent,worst_streamline,worst_stress_Pa,worst_contiguous_duration_s,status
+Red blood cells,0.1943366522909736,5.145709716676267,4903,0,0.0,0.0,647,102.83255417620292,0.00022045309720787279,BELOW LYSIS REFERENCE
+Platelets,0.10247562081249893,9.758418559178226,4903,0,0.0,0.0,4747,20.174870706390177,0.0326193371384248,BELOW LYSIS REFERENCE

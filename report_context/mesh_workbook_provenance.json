@@ -1,0 +1,10 @@
+{
+  "source": "papers\\2D and 3D Mesh Analysis.xlsx",
+  "sha256": "f94c0e0b893332b3ef2d90e82f1e489ddfb685ee6721e4cb019ed2a8f6a7347e",
+  "read_method": "OOXML cells, cached values and formulas; embedded images inspected; workbook unchanged",
+  "checks": {
+    "3D_observed_order": 2.018498668802877,
+    "3D_extrapolated_max_velocity_m_s": 2.5635252504145933,
+    "workbook_formula_values_reproduced": true
+  }
+}

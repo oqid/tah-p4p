@@ -1,0 +1,2336 @@
+
+--- PDF PAGE 1 ---
+ 
+ 
+P4P Scribbles 
+ 
+See document tabs 
+ 
+https://www.overleaf.com/project/6a9a0b15a01c0ae915d3d2f3 
+ 
+
+
+--- PDF PAGE 2 ---
+Check ipad notes 
+Hemolysis 
+-​
+Hemolysis index 
+-​
+Normalized index of Hemolysis 
+-​
+ASTM F1841 Standard, for testing TAH hemolysis (costs money :( ) BUT IS 
+ABOUT REAL BLOOD SO GAF 
+-​
+Hemolysis testing in circulatory support pumps: Standards, mock loops, and 
+pulsatility 
+-​
+Heuser-Opitz (HO) power law model for shear for % hemoglobin damaged 
+ 
+-​
+non-newtonian carreau yasuda equation blood (governing equation for the fact blood 
+gets less viscous the more it’s sheared) ??? Tarusha 
+-​
+https://www.sciencedirect.com/science/article/pii/S2405844025010151 
+-​
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8106046/ - INSANELY GOOD SIM 
+ARTICLE, they find a three-dimensional shear stress tensor from their sims for 
+blood. They DONT use the non-newtonian carreau yasuda equation. 
+-​
+30% Hematocrit 
+-​
+NIH larger than 0.1 g/100 L indicates hemolysis in the blood pump 
+ 
+ 
+NIH = HI% * constant * (1 - Hct) * Hb is how we convert from HO power law to NIH 
+ 
+Fluid–structure interaction modelling of a positive-displacement Total Artificial Heart 
+-​
+For MECHANICS of heart 
+ 
+-​
+https://pubmed.ncbi.nlm.nih.gov/42010686/ Syncardia vs Realheart hemolysis 
+-​
+37.15 ± 12.42 mg/100 L is the Syncardia blood damage 
+-​
+https://www.syncardia.com/download/consultation-guide-for-the-syncardia-t-tah.pdf 
+-​
+Stroke volume of 50cc Syncardia is 50mL, obviously, but is underfilled to 
+between 30-40mL (Link)(Link) 
+ 
+Starling’s Law is the pressure relationship with fluid volume in a heart 
+
+
+--- PDF PAGE 3 ---
+ 
+READ MORE INTO https://en.wikipedia.org/wiki/Cardiac_function_curve 
+ 
+ 
+ 
+https://media.licdn.com/dms/image/v2/D4E22AQEIXZfXwGtKoQ/feedshare-shrink_128
+0/B4EZtNtRjBIsAw-/0/1766535285174?e=1781136000&v=beta&t=7ZTjS-ghT9BIddjwkAR
+D4W3Xf2_fGoEZSC4ckscVXI0 
+-​
+Tharusha’s hemolysis poster 
+ 
+ 
+ 
+https://ideaexchange.uakron.edu/cgi/viewcontent.cgi?article=2257&context=honors_researc
+h_projects 
+
+
+--- PDF PAGE 4 ---
+Programmatical solution for hemolysis 10/08/2026 through to 18/08/2026 
+ 
+See mid-year technical report 
+ 
+ 
+ 
+ 
+ 
+Streamlines 🙂!!!  
+The workflow here is  
+●​ add Expression defined as Shear Strain Rate * Dynamic Viscosity 
+●​ defining a new variable with that expression 
+●​ define a line in front of the area of interest for the streamline to originate 
+●​ add inlet tracer 3D streamline set originating at the inlet line (perpendicular to 
+flow) 
+○​ Set that newly created variable as the Color information applied via 
+Mode Variable 
+
+
+--- PDF PAGE 5 ---
+Export dialogue 
+Location is the streamline 
+●​ AAAshearstress (custom variable) 
+●​ X,Y,Z 
+●​ Velocity  
+with NODE NUMBERS and CONNECTIVITY selected 
+ 
+ 
+ 
+CLANKER CODE ADVICE::​
+Parse [Data] into a DataFrame indexed by node number (X, Y, Z, shear stress, velocity) 
+Parse [Lines] and walk it, splitting into separate streamlines wherever the chain breaks 
+(start-node ≠ previous end-node) 
+For each streamline: compute segment length between consecutive nodes, divide by local 
+velocity to get Δt, accumulate cumulative time 
+Apply your discretized equation (2) per streamline, get HI% per line 
+Flow-weight and average across all streamlines → device HI% → convert to NIH via 
+equation (3) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+--- PDF PAGE 6 ---
+ 
+Outputs of this code: 
+ 
+============================================================ 
+Streamlines processed:        200 
+Device HI% (flow-weighted):   1.496214e-08 % 
+Device NIH:                   0.0016 mg/100L 
+SynCardia 50cc literature:    37.15 +/- 12.42 mg/100L 
+ASTM acceptable limit:        100.0 mg/100L 
+============================================================ 
+ 
+=== Streamline Quality Check === 
+Total streamlines: 200 
+Average points per streamline: 61.165 
+Min/Max velocity: 2.713 / 37.860 m/s 
+Min/Max shear: 0.0 / 3.1 Pa 
+Saved: streamlines_3d.png, shear_vs_time.png, 
+hi_histogram.png, streamline_summary.csv 
+ 
+ 
+The extremely low haemolysis and shear values make sense considering that this is an 
+aerofoil and not a heart 
+ 
+Below are the plot outputs: 
+ 
+
+
+--- PDF PAGE 7 ---
+
+
+--- PDF PAGE 8 ---
+ 
+
+
+--- PDF PAGE 9 ---
+ 
+Title Page 
+Acknowledgements 
+Abstract/Executive summary 
+Table of contents — 
+Introduction 
+Literature review 
+—----- Narrative trail to what we ended up actually doing ? 
+Methods 
+​
+Brief Summary of Methods 
+​
+Design Overview 
+​
+​
+SynCardia 50cc Introduction & Assumptions 
+​
+​
+35cc SynCardia Parameters 
+​
+​
+Downsizing Explained 
+​
+​
+​
+(Parameters like gradation, leaflet valves, etc) 
+​
+Hemolysis Evaluation 
+​
+​
+Physical Rationale / Purpose 
+​
+​
+Programmatical Solution 
+​
+Simulation Design / Parameters 
+​
+​
+Simulation Purpose (Doing what for why) 
+​
+​
+Mesh Justification 
+​
+​
+​
+2D Steady-State 
+​
+​
+3D Steady-State 
+​
+​
+Transient (If applicable) 
+Presentation of results 
+​
+​
+Preliminary vs. Downsized 3D Steady-State Results 
+​
+​
+​
+Individual Parameters Tested in Isolation Results 
+​
+​
+​
+Hemolysis Results 
+​
+​
+Transient (If applicable) 
+Discussion of findings 
+​
+​
+Viability as a TAH (Physiology vs. Flow Results) 
+​
+​
+Physical Trends / Behaviours 
+​
+​
+Hemolysis Trends / Behaviours on Downsizing 
+​
+​
+Discussion of improvements 
+Conclusion 
+​
+Discussion of Future Work  
+List of references 
+Appendices 
+ 
+ 
+ 
+Talk about IPMCs in background >???? 
+Population stuff 
+Carreu-yasuda ignoration 
+ 
+
+
+--- PDF PAGE 10 ---
+Loop 
+-​
+Support 5 L/min flow rate, Cardiac Output at rest, not normalized with Cardiac Index 
+-​
+Blood enters heart non-pulsatile/continuous -> reservoir before heart 
+-​
+If simulating a pulmonary loop, 2-5% less volume output from the right ventricle/to 
+that loop 
+ 
+Heart 
+-​
+Mean Arterial Pressure target is 120-70 mmHg, that's pressure body-wide (16kPa - 
+9.3 kPa) but 65-85mmHg in a 50cc Syncardia running at 180-200mmHg for systole in 
+left ventricle. 
+-​
+Stroke volume between 30-40mL if basing on 50cc Syncardia (max 50mL) 
+-​
+A starting ‘guess’ for the specific stroke volume, as well as ventricle balance 
+that our TAH must operate at can be informed by the Frank–Starling law 
+-​
+Hemolysis reference: 37.15 ± 12.42 mg/100 L based on Syncardia 50cc 
+-​
+NIH larger than 0.1 g/100 L indicates hemolysis in the blood pump 
+-​
+NIH = HI% * constant * (1 - Hct) * Hb is an equation I vibed out based on 
+HI% power law being % damaged hemoglobin, Hct being the percentage of 
+blood that is red blood cells, and Hb is hemoglobin concentration (150g/L) 
+
+
+--- PDF PAGE 11 ---
+Welcome to lit review ongoing, which is where I’m collating studies relating to simulation 
+parameters in CFD, downsizing methodologies, and basically anything that relates to our 
+newer research question 
+ 
+Evaluation-of-eulerian-and-lagrangian-models-for-hemolysis 
+https://www.ovid.com/jnls/asaiojournal/pdf/10.1097/mat.0b013e318254833b~evaluation-of-e
+ulerian-and-lagrangian-models-for-hemolysis
+ 
+Directly Important
+Read
+7 Oct 2026
+-​
+See 
+ Ongoing tab, it’s fantastic for hemolysis modeling 
+P4P SCRIBBLES
+ 
+ 
+Numerical Model of Full-Cardiac Cycle Hemodynamics in a Total Artificial Heart and the 
+Effect of Its Size on Platelet Activation 
+ 
+Directly Important
+Reading
+4 Sept 2026
+-​
+Length scaling factors on 50cc to achieve 35cc 
+-​
+Uses stress accumulation model, NOT power law 
+-​
+SA = Σ τ·dt equiv.  
+★​ Implement the simpler form in my code ✅ 
+-​
+Medtronic Hall Valve no longer in use but previously was used in SynCardia, now 
+Syn-Hall 
+ 
+ 
+Requiem for a good mechanical heart valve: Farewell to the Medtronic Hall valve 
+ 
+Maybe Helpful!
+Reading
+4 Sept 2026
+-​
+Has Medtronic Hall valve figure 
+ 
+ 
+The Medtronic-Hall valve: a design in 1977 to improve the results of valve replacement 
+ 
+Maybe Helpful!
+Not Read
+4 Sept 2026
+-​
+Specifies the valve quantitatively 
+ 
+ 
+https://www.researchgate.net/publication/250920158_Total_artificial_heart_in_the_pediatric_
+patient_with_biventricular_heart_failure 
+
+
+--- PDF PAGE 12 ---
+ 
+Maybe Helpful!
+Not Read
+6 Oct 2026
+-​
+Has flow graph of SynCardia 
+ 
+ 
+ 
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4854792/pdf/nihms-769456.pdf 
+Repetitive Hypershear Activates and Sensitizes Platelets in a Dose-Dependent Manner 
+ 
+Directly Important
+Not Read
+6 Oct 2026
+-​
+No statistically significant platelet activation for single pass, but was important on 
+multiple exposures 
+-​
+LIMITATION OF OUR RESEARCH 
+ 
+https://www.researchgate.net/publication/270513851_Physiological_Characterization_of_the
+_SynCardia_Total_Artificial_Heart_in_a_Mock_Circulation_System 
+Physiological Characterization of the SynCardia Total Artificial Heart in a Mock Circulation 
+System 
+ 
+Directly Important
+Not Read
+6 Oct 2026
+-​
+Mentions afterload and number justifications 
+-​
+TAH is insensitive to variations in afterload YAYAYAYAY IMPORTANT !!! 
+JUSTIFIES OUR AFTERLOAD !!!!! AWINFDOAWSFONIFONAIOFNI 
+
+
+--- PDF PAGE 13 ---
+Repetitive Hypershear Activates and Sensitizes Platelets in a​
+Dose-Dependent Manner​
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4854792/pdf/nihms-769456.pdf 
+ 
+Yes—this paper adds some very relevant discussion, especially around what your 
+platelet SA results can actually establish. It contributes more to your report’s 
+interpretation and limitations than to your haemolysis equations. 
+I read it against haem5.py, your empirical-threshold script, and HAEM_DIAGNOSTICS.md. I 
+haven’t seen your actual report, so “new” here means beyond those files. The paper is 
+Sheriff et al. (2016), Repetitive Hypershear Activates and Sensitizes Platelets in a 
+Dose-Dependent Manner. 
+1. Equal stress accumulation does not necessarily mean equal platelet activation. 
+Your SA calculation reduces a trajectory to SA=∫τ dt. The paper discusses substantially 
+different activation responses at similar SA when stress magnitude, waveform and repetition 
+differ. Its comparisons with earlier experiments suggest that intermittent high stresses can 
+produce more activation than constant exposure with a similar total dose. PDF pp. 7–8. 
+For your report, this supports treating SA as a useful exposure and design-comparison 
+metric, rather than a complete biological activation model. Two geometries could have 
+similar SA distributions but different peak stresses and exposure patterns. 
+For your code, it gives a reason to examine peak stress and stress histories alongside 
+SA—much of which your diagnostics already supports. 
+2. Platelets can retain a response to previous shear exposure. 
+The paper investigates sensitization: platelets exposed to high shear may subsequently 
+continue activating in low shear. This is especially relevant when a trajectory ends at your 
+device outlet; biological consequences may continue downstream. PDF pp. 6, 8–9. 
+However, the single-passage sensitization trend in this experiment was not 
+statistically significant. Present it as suggestive evidence and a limitation of your current 
+model, rather than a proven outcome for your TAH. 
+Your code accumulates exposure but does not model platelet activation state or 
+sensitization. That distinction deserves a paragraph in the report. 
+3. A single device passage cannot establish the effect of repeated circulation. 
+Repeated exposures produced significant activation in the variable-shear experiment. This 
+adds biological motivation to the repeated-exposure limitation already acknowledged in your 
+empirical screening notes. PDF pp. 6–9, Table 1. 
+Two different effects matter: 
+●​ Recirculation inside the device can prolong a particular passage. 
+●​ Systemic circulation can bring previously exposed platelets back through the device. 
+
+
+--- PDF PAGE 14 ---
+Your streamline analysis may capture the first within its tracking limits; it does not establish 
+the second. Multiplying single-pass SA by a passage count would give an exposure 
+estimate, but would not reproduce sensitization or recovery between passages. 
+4. This paper makes your fixed platelet “threshold” wording too strong. 
+The repeated-exposure experiment first found significant PAS elevation at 1611 dyne·s/cm², 
+under its particular protocol. That is not a replacement for your 35 dyne·s/cm² Hellums 
+reference. The endpoints, blood preparations and exposure histories differ. PDF pp. 5–8. 
+More importantly, your code currently describes the Hellums line as a “clinical activation 
+threshold” and implies that the fraction exceeding it directly estimates risk. This paper 
+supports more cautious wording: 
+“Fraction of sampled trajectories exceeding the selected SA reference criterion.” 
+That fraction is neither a measured fraction of activated platelets nor a clinical thrombosis 
+probability. I would prioritise correcting that interpretation before adding another model. 
+5. Platelet activation, platelet lysis and haemolysis are different endpoints. 
+The study measures platelet procoagulant activity through a modified prothrombinase assay, 
+plus morphology. It does not validate your RBC haemolysis HI/NIH predictions or your 
+platelet-lysis boundary. PDF pp. 5, 9. 
+Its experiments also used isolated platelets at low concentration, with short intervals 
+between repeated exposures. The authors explicitly caution that this differs from 
+physiological blood and circulation. Those limitations prevent directly transferring its 
+experimental threshold to your CFD results. 
+My recommendation: use this paper prominently to discuss the limits of SA, repeated 
+exposure, and platelet memory. Keep your existing haemolysis calculations; the most 
+immediate improvement is to qualify the platelet threshold language. The key report 
+argument is that your analysis compares mechanical exposure, while biological 
+thrombogenicity additionally depends on exposure history and the response being 
+measured. 
+All page references above refer to your local PDF (papers/nihms-769456.pdf). 
+ 
+ 
+
+
+--- PDF PAGE 15 ---
+ 25th May 
+P4P SCRIBBLES
+
+
+--- PDF PAGE 16 ---
+25th May Meeting Notes 
+ 
+●​ Talk about hemolysis and heart specs 
+  
+P4P SCRIBBLES
+●​ I Read heart hackathon info again 
+●​ We really want Tharusha in the Teams chat 
+●​ 35cc article - have not read it yet 
+●​ We were supposed to appear with a sketch this meeting 
+○​ I have target parameters, some based 50cc Syncardia, but no sketch 
+■​ I want to read all the articles I found this week’s sections on testing 
+loops 
+○​ Tharusha has informed me we can probably just use his heart loop as a base 
+for designing ours or just using his 
+ 
+ 
+ 
+-​
+Goal 
+-​
+We really need to thoroughly read 35cc paper for research purpose 
+-​
+Find NIH acceptable limits of hemolysis in g/100L 
+-​
+EMAIL raj our progress and thoughts during this week so we can move on to 
+new things DURING the week 
+
+
+--- PDF PAGE 17 ---
+ 
+4 Sept 2026
+ 
+ 
+Created 
+ Lit Review Ongoing tab and looked back into new literature on 
+P4P SCRIBBLES
+Scopus with the bangs TITLE-ABS-KEY( "computational fluid dynamics" AND ("syncardia") ) 
+ 
+Found patent WO2009084027A2 which may be for the Syn Hall valve, the google patent 
+was broken so an archive.is snapshot was made to reveal it (patent download) 
+ 
+Found specification of Medtronic Hall Valve: The Medtronic-Hall valve: a design in 1977 to 
+improve the results of valve replacement  
+ 
+ 
+ 
+9 Sept 2026
+ 
+
+
+--- PDF PAGE 18 ---
+​
+In mesh 
+ 
+ 
+Issues: Lack of named selections in the Mesh component means the boundary conditions 
+aren’t inferred by ansys, moreover is the diaphragm supposed to be an inlet ? the simulation 
+breaks when changed to a wall 
+It’s also a pain to not have them be named :( 
+ 
+1.3 Pa is too little for the max scalar shear stress measured at systole 
+I am not including wall shear because I think scalar shear is more important and easier  
+ 
+Blood is defined as a custom material - I need to check its bulk modulus and other definitions 
+ 
+
+
+--- PDF PAGE 19 ---
+Why does the velocity inlet (diaphragm) feed at 0.042m/s (4.2 cm/s) ? 
+ 
+ 
+ 
+The outlet is a wall /// ????? thats causing recirculation!!! and thats not !!!! accurate !!!! 
+like thats recirculation 
+ 
+
+
+--- PDF PAGE 20 ---
+ 
+ 
+Changed the outlet to an opening, and ran simulation at new convergence criteria of 1e-4 
+because i dont have time to wait  
+ 
+1e-6 
+ 
+ 
+Blood properties: 
+​
+Molar mass can remain the default value because I don’t think it’s used to calculate 
+anything for the simulation? 
+Density being changed from 1050kg/m3 to 1060kg/m3 
+(https://www.sciencedirect.com/topics/engineering/human-blood) 
+
+
+--- PDF PAGE 21 ---
+Dynamic Viscosity from 0.004 to 0.0035 Pas (3.5 centipoise, i cannot for the life of 
+me find the studies that mentioned this) 
+​
+ 
+It can be incompressible because the blood is not moving fast enough for it to matter - 
+2.7·10^9 Pa is defined as the bulk modulus by this paper indicating it’s mildly compressible 
+but I don’t think it matters, they cite a paper for another number that models blood as 
+incompressible anyway (+ laminar + newtonian) 
+ 
+ 
+Velocity of the inlet: 
+4.5cm/s currently, but to cover the diaphragm distance (0.02 metres) at 120bpm is 
+12.6cm/s for mid systole assuming a sine wave like in the study  
+ 
+Backpressure of the outlet/opening: 
+​
+100mmHg, no idea what it should be. Claude says 120mmHg but i dont know  
+ 
+  
+
+
+--- PDF PAGE 22 ---
+New simulation at 12.6cm/s diaphragm motion, peak velocity is now 1.5m/s, averaging 
+around 0.8 m/s at the outlet which is … sort of … normal ???? WOW !!! 
+ 
+We should probably double check the mesh resolution near the walls (y+ according to 
+google) since the shear is still low ? but it is also 2D so idk 
+ 
+ 
+ 
+13 Sept 2026
+3D simulation investigation 
+Find out why my hemolysis is underreported 
+ 
+Oh my god ^^^ this paper  
+ 
+
+
+--- PDF PAGE 23 ---
+ 
+Angling the inlet/outlets based on inference from the university of dakron paper below 
+ 
+“Mesh independence: since you're already comparing against a literature hemolysis value, a 
+basic mesh sensitivity check (2–3 refinement levels, compare hemolysis index convergence, 
+not just velocity) is worth having in your report — reviewers will ask.” 
+-​
+From Claudius 
+
+
+--- PDF PAGE 24 ---
+ 
+ 
+ 
+ 
+Orthog error goes to 1.85e-2 minimum, but on average is 0.74 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+--- PDF PAGE 25 ---
+ 
+Todo : expand the distance between the inlets and outlets  
+ 
+ 
+ 
+ 
+It didnt simulate :( 
+ 
+ 
+
+
+--- PDF PAGE 26 ---
+ 
+17 Sept 2026
+Lots of git  
+100k hemolysis sim 
+Add loadbar 
+Meeting 
+Read papers 
+ 
+Evaluation-of-eulerian-and-lagrangian-models-for-hemolysis 
+https://www.ovid.com/jnls/asaiojournal/pdf/10.1097/mat.0b013e318254833b~evaluation-of-e
+ulerian-and-lagrangian-models-for-hemolysis 
+-​
+Does my haem model account for long-exposure time low-shear haemolysis ? 
+(eq 3) yes I’m using HI4, notably weak for undershooting expected haemolysis 
+when the shear stressors are later on in time from t=0, the cumulative sum of 
+damage favors earlier stress because it is the beta-1 denominator  
+-​
+Eq 7 outlines a mechanical dose model that accounts for short and long 
+term per-particle shear 
+-​
+They use multiple reference frame approx for quasi steady state 
+-​
+Hemolysis HI%total is averaged among all outflowing paths  
+-​
+Number of pathlines didnt really change hemolysis index !!!!!!!!!! 
+-​
+Time steps didnt really change HI% ! 
+-​
+Which accumulator model am i using ?? and which does the study like the 
+most (HI4 is mine) 
+-​
+ 
+ 
+Grill claude on why my pdf doesnt look right 
+Understand stress accumulator better 
+Try recreate plotting methods seen in the studies i.e. numerical methods 
+ 
+Report : one comparison plot possible could be power law comparison (three 
+different models exist of the power law coefficients) and see which is the most similar 
+to literature !! 
+ 
+ 
+18 Sept 2026
+Evaluation-of-eulerian-and-lagrangian-models-for-hemolysis 
+https://claude.ai/chat/0816cab3-36e5-40ed-9264-8d33c832a0bf (equation explainer for HI4) 
+-​
+HI4  
+-​
+The paper notably says that they OMIT reynolds shear stresses (turbulence) as 
+they elevate shear fields, we use SST k-epsilon or something and that does 
+have a major turbulence component - its ok that i dont touch it :) 
+-​
+“since HI scales as τ^α with α≈2, any smoothing of the peak wall shear stress 
+from a coarse near-wall mesh gets squared into a much larger HI error.” from 
+admittedly claude (forgive me, I am tired today), acknowledges that in the 
+absence of reynolds shear the mesh fineness near the walls becomes really 
+really important for HI% estimation 
+-​
+y+ checkover in highest fineness regions is super duper important for 
+the HI model to work properly !!! 
+ 
+
+
+--- PDF PAGE 27 ---
+Debugging: 
+My code underestimates hemolysis by a lot. I’ve since changed the model to HI3 from the 
+study above, because it doesnt diminish the influence of shear at t>>0 
+ 
+ 
+As we can see, these are rather similar but the HI3 model overall produces greater HI% 
+HI2 (temporal-derivative form, Taskin et al. Eq. 4): 
+  Device HI2% (flow-weighted): 2.652783e-06 % 
+  Device NIH (from HI2):       0.2785 mg/100L 
+HI3 (local/linearized form, Taskin et al. Eq. 5): 
+  Device HI3% (flow-weighted): 3.305893e-06 % 
+  Device NIH (from HI3):       0.3471 mg/100L 
+ 
+Still both not great !!! Too low overall !!! 
+Also I added Giersepen constants, and Heuser-Opitz constants as separate things I can 
+switch between, I mislabeled them in previous versions. 
+ 
+aomsdsamdpmpad 
+ 
+==================================================================
+== 
+Streamline coverage diagnostic 
+==================================================================
+== 
+  Streamlines analysed:              958 
+  Segments floored (all lines):        0.00 %  (median per-line: 
+0.00 %) 
+  Streamlines with >10% floored:       0.00 % 
+  Streamlines with >50% floored:       0.00 % 
+------------------------------------------------------------------
+-- 
+  Total transit time t_total [s]: 
+    min / median / max:              2.2293e-04 / 9.6095e-02 / 
+2.3217e-01 
+    std / mean:                      4.9896e-02 / 1.2538e-01 
+    coefficient of variation:        0.398 
+
+
+--- PDF PAGE 28 ---
+------------------------------------------------------------------
+-- 
+  VERDICT: Coverage looks healthy - floor is a rare safety 
+           net and transit times span a plausible range. 
+==================================================================
+== 
+ 
+Yay!  
+ 
+I also checked in haem5_recirculationtest.py if I was turning too many particles to zero 
+velocity (I do that because tiny tiny values in the denominator of my math explodes it), and it 
+seems we aren’t. Good. Because stagnant and pressurized areas can be important for 
+raising HI%. Ansys may also be refusing to export recirculation paths amongst my 
+population of pathlines, and that would also cause this issue :( 
+ 
+I realized that meshing is probably something that limits the code’s ability to be debugged 
+I then spent 2 hours refining the mesh poorly. Of the 2D sim . it did not converge 
+ 
+ 
+ 
+ 
+19 Sept 2026
+ 
+ 
+ 
+Solving skewness issues resulting in simulations failing by removing the valve gap (above) 
+and by filletting every edge of the 2D sim - the infinitely fine points of the mesh e.g. 90 
+degree edges or concentric circle points probably break the solver  
+
+
+--- PDF PAGE 29 ---
+​
+The above model uses a common 0.2mm fillet, except for the corners of the 
+diaphragm (0.4mm) 
+ 
+It meshed and simulated !!! YAY !!!! 
+ 
+Result -> 19sept_110kfilleted_18pa_remesh_sevan.wbpz uses a new model (see ipt 
+files for the filleted version uploaded 19 Sept) to smooth all the messy parts of the 
+geometry, which lets me mesh up to 110,000 elements for a simulation time of like ,,,, 
+20 minutes ? for the 2D version at mid systole. It gets a peak velocity of 1.5m/s, a peak 
+internal pressure of ~110mmHg, and the shear is 18 Pa max: 7% haemolysis !!!! Very 
+good !!! Mesh took like 30 seconds to generate :) 
+ 
+asdsa 
+ 
+From blood modelling paper 
+ 
+
+
+--- PDF PAGE 30 ---
+ 
+ 
+ 
+See S2 Midsem for sept 20 and 21, I forgot to move it here lol 
+ 
+20 Sept 2026 21 Sept 2026
+ 
+23 Pa from simulating 300k ish elements !!!! I used the initial conditions from the res file of 
+the 110k simulation and it worked instead of breaking !!!  
+ 
+ 
+Now trying a 5.6 million element one !!!  this has taken 4 hours to process !! (and only 6 
+minutes to simulate since my ICs were from the 110k mesh) 
+ 
+
+
+--- PDF PAGE 31 ---
+ 
+Taskin et al. cites Roach for a mesh error estimation that I can use to figure out if 5.6 million 
+is at ALL acceptable in a pretty cool workflow for assuming error from the diminishing returns 
+end point of a value that is changing with mesh resolution 
+ 
+Next I should: 
+​
+Double check my refinement ratio from Copy of Copy of Copy of Fluid Flow (E) 
+​
+Apply it to a new high res sim 
+​
+Calculate errors from AVERAGE varshear across them 🙂 
+ 
+ 
+I also need to double check if my hemolysis is ok  
+https://claude.ai/chat/0816cab3-36e5-40ed-9264-8d33c832a0bf 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+--- PDF PAGE 32 ---
+ 
+21 Sept 2026
+ 
+Grid convergence index study !!!! 
+ 
+For 2D filleted mesh simplified  
+ 
+Mesh 
+Element size 
+Resulting cells φ (Pa) 
+Coarse 
+0.000175 
+110,008 
+18 
+Medium 
+0.0001 
+330,188 
+24 
+Fine 
+0.0000571 
+998156 
+25 
+ 
+Taskin et al. equations for p then yield: (see notes screenshot above) 
+https://claude.ai/artifact/QR4q7uY5h1ZW2CpeEDo4NG 
+ 
+φ = 25 Pa ± 0.6 Pa (GCIfine = 2.4 %, p = 2, Fs = 1.25) 
+ 
+Mesh-independent estimate: 25.2–25.5 Pa. The medium mesh (h = 0.0001) is within about 
+5–6 % of this value. 
+ 
+ 
+24 Sept 2026
+ 
+Double check new code outputs with 330k mesh and 998k mesh 
+Double check outputs against literature / what I can actually take away from them :) 
+ 
+From the 110k simulation: 
+ 
+\Documents\tah-p4p\.venv\Scripts\Activate.ps1py haem5.py export_18pa.csv                                                 
+Hemolysis: 
+100%|█████████████████████████████████████████████████████
+████████████████| 969/969 [00:02<00:00, 346.83line/s] 
+============================================================ 
+Streamlines processed:        969 
+Constants used:                A=3.62e-05  alpha=2.416  beta=0.785 (GW) 
+------------------------------------------------------------ 
+HI2 (temporal-derivative form, Taskin et al. Eq. 4): 
+  Device HI2% (flow-weighted): 4.208324e-06 % 
+  Device NIH (from HI2):       0.4419 mg/100L 
+HI3 (local/linearized form, Taskin et al. Eq. 5): 
+  Device HI3% (flow-weighted): 7.322561e-06 % 
+  Device NIH (from HI3):       0.7689 mg/100L 
+------------------------------------------------------------ 
+SynCardia 50cc literature:    37.15 +/- 12.42 mg/100L 
+ASTM acceptable limit:        100.0 mg/100L 
+
+
+--- PDF PAGE 33 ---
+------------------------------------------------------------ 
+Device SA (median):           0.3372 dyne*s/cm^2 
+Hellums threshold:            35.0 dyne*s/cm^2 
+P(SA > Hellums threshold):    0.000 % 
+Marom et al. medians (ref):   {'70cc_TAH': 1.12, '50cc_TAH': 2.19, '35cc_TAH': 3.41} 
+============================================================ 
+ 
+=== Streamline Quality Check === 
+Total streamlines: 969 
+Average points per streamline: 109.5954592363261 
+Min/Max velocity: 0.038 / 1.595 m/s 
+Min/Max shear: 0.0 / 18.1 Pa 
+Saved outputs: 
+  outputs\streamlines_3d_2026-09-24_14-44-56_haem5_export_18pa.png 
+  outputs\shear_vs_time_2026-09-24_14-44-56_haem5_export_18pa.png 
+  outputs\hi_histogram_2026-09-24_14-44-56_haem5_export_18pa.png 
+  outputs\sa_pdf_2026-09-24_14-44-56_haem5_export_18pa.png 
+  Outputs\streamline_summary_2026-09-24_14-44-56_haem5_export_18pa.csv 
+ 
+ 
+ 
+26 Sept 2026
+Code verification with gpt6astra codex medium,  
+ 
+https://ansyshelp.ansys.com/public/account/secured?returnurl=/Views/Secured/corp/v242/en
+/cfx_thry/i1298716.html 
+FOR REPORT 
+ 
+Do not assume that every paper’s “scalar shear stress” has identical normalization. Compare 
+the expanded expression with Taskin’s Eq. 10, explicitly specifying how tensor components 
+are summed. Different conventions can introduce constant factors that become amplified by 
+the stress exponent. 
+ 
+“Three-dimensional quasi-steady CFD was used to estimate viscous-stress-induced 
+haemolysis during a prescribed mid-systolic operating condition. Flux-weighted predictions 
+were assessed for mesh, trajectory-sampling, and integration sensitivity. Results 
+characterize the specified flow condition and do not represent validated full-cycle 
+haemolysis.” 
+ 
+ 
+"Scalar viscous stress was calculated as dynamic viscosity multiplied by the CFX 
+scalar shear strain rate (Eq. 1-49/1-50 in the CFX-Solver Theory Guide). This quantity 
+was verified analytically to be algebraically identical to the scalar shear stress of 
+
+
+--- PDF PAGE 34 ---
+Taskin et al. (Eq. 10, based on Bludszuweit's formulation), given the 
+incompressible-flow assumption used in both studies (trace-free viscous stress 
+tensor). Reynolds stresses were excluded from both formulations, consistent with the 
+molecular-viscosity-only scaling of the resolved mean strain rate under SST." 
+→ outcome here is that the equations that CFX uses and Taskin et al. both are the same for 
+calculating scalar shear stresses 
+ 
+Scalar viscous stress was calculated as dynamic viscosity multiplied by the CFX scalar 
+shear strain rate (CFX-Solver Theory Guide, Eqs. 1-49–1-50). Analytical expansion 
+demonstrated equivalence to Taskin et al.’s scalar stress formulation (Eq. 10) under the 
+incompressible-flow assumption, for which the viscous stress tensor is trace-free. Molecular 
+viscosity and the SST-predicted mean velocity gradients were used; Reynolds stresses were 
+excluded from the haemolysis stress measure, consistent with Taskin et al. 
+ 
+ 
+ 
+30 Sept 2026
+Hemolysis: 
+100%|█████████████████████████████████████████████████████
+█████████████████████████████████████████████████████████
+██████| 985/985 [00:02<00:00, 332.35line/s] 
+============================================================ 
+Streamlines processed:        985 
+Constants used:                A=3.62e-05  alpha=2.416  beta=0.785 (GW) 
+------------------------------------------------------------ 
+HI2 (temporal-derivative form, Taskin et al. Eq. 4): 
+  Device HI2% (flow-weighted): 1.286683e-04 % 
+  Device NIH (from HI2):       13.5102 mg/100L 
+HI3 (local/linearized form, Taskin et al. Eq. 5): 
+  Device HI3% (flow-weighted): 2.281012e-04 % 
+  Device NIH (from HI3):       23.9506 mg/100L 
+------------------------------------------------------------ 
+SynCardia 50cc literature:    37.15 +/- 12.42 mg/100L 
+ASTM acceptable limit:        100.0 mg/100L 
+------------------------------------------------------------ 
+Device SA (median):           0.6433 dyne*s/cm^2 
+Hellums threshold:            35.0 dyne*s/cm^2 
+P(SA > Hellums threshold):    0.000 % 
+Marom et al. medians (ref):   {'70cc_TAH': 1.12, '50cc_TAH': 2.19, '35cc_TAH': 3.41} 
+============================================================ 
+ 
+=== Streamline Quality Check === 
+Total streamlines: 985 
+Average points per streamline: 91.95228426395938 
+Min/Max velocity: 0.019 / 3.379 m/s 
+Min/Max shear: 0.0 / 94.4 Pa 
+Saved outputs: 
+  outputs\streamlines_3d_2026-09-30_21-00-58_haem5_1000p_10ks_alotpa_3d.png 
+
+
+--- PDF PAGE 35 ---
+  outputs\streamline_selection_2026-09-30_21-00-58_haem5_1000p_10ks_alotpa_3d.csv 
+  outputs\shear_vs_time_2026-09-30_21-00-58_haem5_1000p_10ks_alotpa_3d.png 
+  outputs\hi_histogram_2026-09-30_21-00-58_haem5_1000p_10ks_alotpa_3d.png 
+  outputs\sa_pdf_2026-09-30_21-00-58_haem5_1000p_10ks_alotpa_3d.png 
+  outputs\streamline_summary_2026-09-30_21-00-58_haem5_1000p_10ks_alotpa_3d.csv 
+ 
+This is within the range of https://www.nature.com/articles/s41598-026-68178-2 
+https://pubmed.ncbi.nlm.nih.gov/42010686/ 
+ 
+Thank god 
+ 
+ 
+1 Oct 2026
+Doing an analysis to figure out if the number of sampled points is independent to the 
+calculated hemolysis so i know what number of points i can do for all future simulations 
+ 
+sweep.cse https://claude.ai/chat/d614bfae-e561-49b2-8c85-0642aaa6b710 
+ 
+  done in 377.2 s, saved sweep_results.csv for firstsim_3d 
+ 
+====================================================================== 
+ N_requested  n_streamlines constants  HI2_percent  HI3_percent  HI2_NIH_mg_per_100L  
+HI3_NIH_mg_per_100L 
+          10             10        GW    1.743e-05    3.345e-05                 1.83                3.512 
+          30             30        GW    6.623e-05    0.0001532                6.955                16.09 
+         100            100        GW    8.498e-05    0.0001833                8.923                19.24 
+         300            298        GW    0.0001232    0.0002143                12.94                 22.5 
+        1000            985        GW    0.0001287    0.0002281                13.51                23.95 
+        3000           2905        GW    0.0001374    0.0002343                14.42                 24.6 
+       10000           9709        GW    0.0001638    0.0002738                 17.2                28.75 
+       30000          29451        GW    0.0001745    0.0002839                18.32                29.81 
+          10             10        HO    4.387e-07    7.747e-07              0.04607              0.08135 
+          30             30        HO    1.094e-06    2.283e-06               0.1148               0.2397 
+         100            100        HO    1.334e-06    2.677e-06               0.1401               0.2811 
+         300            298        HO    1.936e-06    3.262e-06               0.2033               0.3425 
+        1000            985        HO    2.038e-06    3.444e-06                0.214               0.3616 
+        3000           2905        HO    2.197e-06    3.571e-06               0.2306               0.3749 
+       10000           9709        HO    2.508e-06    4.017e-06               0.2633               0.4218 
+       30000          29451        HO    2.649e-06    4.146e-06               0.2781               0.4353 
+          10             10        TZ    3.676e-06    8.944e-06                0.386               0.9391 
+          30             30        TZ    8.614e-06    2.673e-05               0.9044                2.806 
+         100            100        TZ    1.081e-05    3.119e-05                1.135                3.275 
+         300            298        TZ    1.577e-05    3.491e-05                1.655                3.665 
+        1000            985        TZ    1.696e-05    3.789e-05                 1.78                3.978 
+        3000           2905        TZ    1.838e-05     3.88e-05                 1.93                4.074 
+       10000           9709        TZ    2.076e-05    4.298e-05                2.179                4.512 
+       30000          29451        TZ    2.192e-05    4.392e-05                2.302                4.611 
+====================================================================== 
+
+
+--- PDF PAGE 36 ---
+(.venv) PS C:\Users\kingk\Documents\tah-p4p> python plot_sweep.py                                               
+                                                                   
+HI2-GW  (reference = finest level, 29451 lines) 
+ lines     value  % vs finest  % vs previous 
+    10 1.743e-05       -90.01            NaN 
+    30 6.623e-05       -62.04            280 
+   100 8.498e-05        -51.3           28.3 
+   298 0.0001232       -29.38          45.01 
+   985 0.0001287       -26.26          4.413 
+  2905 0.0001374       -21.28          6.753 
+  9709 0.0001638       -6.136          19.24 
+ 29451 0.0001745            0          6.538 
+ 
+HI3-GW  (reference = finest level, 29451 lines) 
+ lines     value  % vs finest  % vs previous 
+    10 3.345e-05       -88.22            NaN 
+    30 0.0001532       -46.02          358.2 
+   100 0.0001833       -35.45          19.59 
+   298 0.0002143       -24.53          16.92 
+   985 0.0002281       -19.65          6.454 
+  2905 0.0002343       -17.47          2.724 
+  9709 0.0002738       -3.542          16.87 
+ 29451 0.0002839            0          3.672 
+ 
+HI2-HO  (reference = finest level, 29451 lines) 
+ lines     value  % vs finest  % vs previous 
+    10 4.387e-07       -83.43            NaN 
+    30 1.094e-06       -58.71          149.3 
+   100 1.334e-06       -49.63          21.98 
+   298 1.936e-06        -26.9          45.13 
+   985 2.038e-06       -23.05          5.271 
+  2905 2.197e-06       -17.07           7.77 
+  9709 2.508e-06       -5.327          14.16 
+ 29451 2.649e-06            0          5.627 
+ 
+HI3-HO  (reference = finest level, 29451 lines) 
+ lines     value  % vs finest  % vs previous 
+    10 7.747e-07       -81.31            NaN 
+    30 2.283e-06       -44.94          194.7 
+   100 2.677e-06       -35.42          17.28 
+   298 3.262e-06       -21.32          21.83 
+   985 3.444e-06       -16.93           5.59 
+  2905 3.571e-06       -13.87          3.675 
+  9709 4.017e-06       -3.116          12.49 
+ 29451 4.146e-06            0          3.216 
+ 
+HI2-TZ  (reference = finest level, 29451 lines) 
+ lines     value  % vs finest  % vs previous 
+
+
+--- PDF PAGE 37 ---
+    10 3.676e-06       -83.23            NaN 
+    30 8.614e-06        -60.7          134.3 
+   100 1.081e-05       -50.67          25.53 
+   298 1.577e-05       -28.08           45.8 
+   985 1.696e-05       -22.65          7.549 
+  2905 1.838e-05       -16.13          8.422 
+  9709 2.076e-05       -5.312           12.9 
+ 29451 2.192e-05            0           5.61 
+ 
+HI3-TZ  (reference = finest level, 29451 lines) 
+ lines     value  % vs finest  % vs previous 
+    10 8.944e-06       -79.64            NaN 
+    30 2.673e-05       -39.15          198.8 
+   100 3.119e-05       -28.98           16.7 
+   298 3.491e-05       -20.52          11.92 
+   985 3.789e-05       -13.74          8.536 
+  2905  3.88e-05       -11.66          2.406 
+  9709 4.298e-05       -2.149          10.77 
+ 29451 4.392e-05            0          2.196 
+ 
+Saved hi_vs_pathlines.png 
+(.venv) PS C:\Users\kingk\Documents\tah-p4p>  
+ 
+ 
+ 
+ 
+ 
+
+
+--- PDF PAGE 38 ---
+Todo next time : random point testing instead of equally spaced 
+ 
+Test step file visualization 
+ 
+ 
+4 Oct 2026
+ 
+Does residual amount e-3 vs e-5 affect hemolysis ??  
+ 
+Can I drive a geometry boundary in Inventor with a sine wave? 
+​
+ 
+ 
+Yes 
+Whats happening here is that the original TAH model no longer has a diaphragm, a separate 
+file is revolving a parametric equation to make a dome, and an assembly is bringing those 
+together to make a new ipt that booleans the dome out of the TAH model fluid domain 
+ 
+ 
+ 
+Pump : 1 is 20mm rise, 0.001 is almost 0, 0.5 is 10mm, it is an analogue for the diaphragm 
+ 
+
+
+--- PDF PAGE 39 ---
+ 
+https://patentimages.storage.googleapis.com/57/c0/87/b31a50ab08f215/US5924975.pdf 
+US5924975A - Michael P. Goldowsky - Linear pump 
+ 
+ 
+ 
+5 Oct 2026
+https://chatgpt.com/c/6ac2e184-5524-83ec-9936-37dc0c572346 
+Based on the patent above, made a threshold checker to compliment the mathematical 
+modelling of hemolysis - there's gonna be biological thresholds where things just blow up 
+regardless of the accumulated time / stress 
+ 
+ 
+@Hemolysis does residual amount e-3 vs e-5 affect hemolysis ?? 
+if stable for flow rate and pressure / shear stress then we can just ASSUME the solution is 
+verified / stable for using in the haem calcs 
+ 
+ 
+
+
+--- PDF PAGE 40 ---
+ 
+https://www.cell.com/biophysj/pdf/S0006-3495(72)86085-5.pdf?_returnURL=https%3A%2F%
+2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS0006349572860855%3Fshowall%3Dtrue 
+Hematocrit concentration and resulting hemolysis percentagewise is not correlated 
+ 
+Can mention this for future recommendations (temperature is concerning) 
+ 
+RED BLOOD CELL DAMAGE 
+BY SHEAR STRESS 
+L. B. LEVERETT, J. D. HELLUMS, C. P. ALFREY, ad E. C. LYNCH 
+From the Biomedical Engineering Laboratory, Rice University, Houston, 
+Texas 77025, and Baylor University College of Medicine, Houston, Texas 77025 
+ 
+ 
+https://chatgpt.com/c/6ac2e184-5524-83ec-9936-37dc0c572346 
+file:///C:/Users/kingk/Downloads/Guidelines_for_Blood_material_Interactio.pdf 
+ 
+
+
+--- PDF PAGE 41 ---
+ 
+ 
+Peak 
+ 
+ 
+                                             python haem5_empiricalthresholds.py 
+1000p_100_alotpa_3djawn.csv 
+Hemolysis: 
+100%|█████████████████████████████████████████████████████
+█████████████████████████████████████████████████████████
+██████| 100/100 [00:00<00:00, 254.39line/s] 
+ 
+======================================================================
+============ 
+Empirical stress-exposure threshold screening (independent of Taskin HI) 
+======================================================================
+============ 
+      criterion  max_utilization  streamlines_unassessed  streamlines_exceeding_percent  
+flow_weighted_exceedance_percent  worst_stress_Pa  worst_contiguous_duration_s             
+status 
+
+
+--- PDF PAGE 42 ---
+Red blood cells           0.1845                       0                              0                                 0            
+39.93                     0.004076 BELOW LYSIS REFERENCE 
+      Platelets          0.07072                       0                              0                                 0            
+36.74                     0.005075 BELOW LYSIS REFERENCE 
+ 
+Interpretation: utilization = actual stress / empirical critical stress 
+  utilization < 1  -> below empirical boundary 
+  utilization >= 1 -> boundary crossed 
+NOTE: Approximate NIH Fig. 3.6 traces; screening for lysis, not activation. 
+      Repeated separated exposures are not accumulated by this envelope. 
+======================================================================
+============ 
+Saved: 
+  
+outputs_empirical\empirical_threshold_summary_2026-10-05_20-53-32_1000p_100_alotpa
+_3djawn.csv 
+  
+outputs_empirical\empirical_threshold_device_2026-10-05_20-53-32_1000p_100_alotpa_3d
+jawn.csv 
+  
+outputs_empirical\empirical_exposure_envelope_2026-10-05_20-53-32_1000p_100_alotpa_
+3djawn.csv 
+  
+outputs_empirical\empirical_stress_duration_2026-10-05_20-53-32_1000p_100_alotpa_3dja
+wn.png 
+ 
+ 
+ 
+
+
+--- PDF PAGE 43 ---
+ 
+ 
+Empirical_stress_duration_report_ms_1000p_100_alotpa_3djawn.png (above) got with 
+python haem5_empiricalthresholds.py 1000p_100_alotpa_3djawn.csv 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+--- PDF PAGE 44 ---
+ALSO RE: THE SWEEP 
+ 
+ 
+ 
+https://chatgpt.com/c/6ac35d45-8e50-83ec-a0ca-58ab2fd88bc0 
+ 
+WE CAN JUSTIFY our choice of pathline count by assuming 30k as a ‘reference’ or an 
+assumed convergence, because we have nothing to compare to. It just seems to change my 
+diminishing amounts from then on despite exp. Increasing processing time. 
+ 
+ 
+Requested 
+pathlines 
+HI2-GW 
+HI3-GW 
+HI2-HO 
+HI3-HO 
+HI2-TZ 
+HI3-TZ 
+1,000 
+26.26% 
+19.65% 
+23.05% 
+16.93% 
+22.65% 
+13.74% 
+3,000 
+21.28% 
+17.47% 
+17.07% 
+13.87% 
+16.13% 
+11.66% 
+10,000 
+6.14% 
+3.54% 
+5.33% 
+3.12% 
+5.31% 
+2.15% 
+ 
+
+
+--- PDF PAGE 45 ---
+Via sweep results (NOTE THAT TZ IS IRRELEVANT TO OUR INVESTIGATION) 
+ 
+(.venv) PS C:\Users\kingk\Documents\tah-p4p> python sweeps/run_sweep.py --resume 
+--constants GW HO 
+[N=10] already done, skipping 
+[N=30] already done, skipping 
+[N=100] already done, skipping 
+[N=300] already done, skipping 
+[N=1000] already done, skipping 
+[N=3000] already done, skipping 
+[N=10000] already done, skipping 
+[N=30000] already done, skipping 
+ 
+##### N = 100000   (sweep_N100000.csv) ##### 
+Hemolysis: 
+100%|█████████████████████████████████████████████████████
+█████████████████████████████████████████████████████████
+██| 97331/97331 [05:20<00:00, 304.12line/s] 
+[GW] fitted range: tau < 255 Pa, t < 700 ms 
+  segments with tau over range: 0.0% 
+  segments with t over range:   0.0% 
+Hemolysis: 
+100%|█████████████████████████████████████████████████████
+█████████████████████████████████████████████████████████
+██| 97331/97331 [05:31<00:00, 293.45line/s] 
+[HO] fitted range: tau < 700 Pa, t < 700 ms 
+  segments with tau over range: 0.0% 
+  segments with t over range:   0.0% 
+ 
+====================================================================== 
+Constant-set comparison (device-level, flow-weighted): 
+           HI2_percent  HI3_percent  HI2_NIH_mg_per_100L  HI3_NIH_mg_per_100L  
+frac_segments_tau_over_range  frac_segments_t_over_range 
+constants                                                                                                                               
+GW           0.0001617    0.0002676                16.98                 28.1                             0                   
+0.0002226 
+HO           2.477e-06    3.934e-06                 0.26               0.4131                             0                   
+0.0002226 
+SynCardia 50cc literature NIH: 37.15 +/- 12.42 mg/100L 
+ASTM acceptable limit:         100.0 mg/100L 
+====================================================================== 
+  done in 1083.2 s, saved C:\Users\kingk\Documents\tah-p4p\sweeps\sweep_results.csv 
+ 
+====================================================================== 
+ N_requested  n_streamlines constants  HI2_percent  HI3_percent  HI2_NIH_mg_per_100L  
+HI3_NIH_mg_per_100L 
+          10             10        GW    1.743e-05    3.345e-05                 1.83                3.512 
+          30             30        GW    6.623e-05    0.0001532                6.955                16.09 
+
+
+--- PDF PAGE 46 ---
+         100            100        GW    8.498e-05    0.0001833                8.923                19.24 
+         300            298        GW    0.0001232    0.0002143                12.94                 22.5 
+        1000            985        GW    0.0001287    0.0002281                13.51                23.95 
+        3000           2905        GW    0.0001374    0.0002343                14.42                 24.6 
+       10000           9709        GW    0.0001638    0.0002738                 17.2                28.75 
+       30000          29451        GW    0.0001745    0.0002839                18.32                29.81 
+      100000          97331        GW    0.0001617    0.0002676                16.98                 28.1 
+          10             10        HO    4.387e-07    7.747e-07              0.04607              0.08135 
+          30             30        HO    1.094e-06    2.283e-06               0.1148               0.2397 
+         100            100        HO    1.334e-06    2.677e-06               0.1401               0.2811 
+         300            298        HO    1.936e-06    3.262e-06               0.2033               0.3425 
+        1000            985        HO    2.038e-06    3.444e-06                0.214               0.3616 
+        3000           2905        HO    2.197e-06    3.571e-06               0.2306               0.3749 
+       10000           9709        HO    2.508e-06    4.017e-06               0.2633               0.4218 
+       30000          29451        HO    2.649e-06    4.146e-06               0.2781               0.4353 
+      100000          97331        HO    2.477e-06    3.934e-06                 0.26               0.4131 
+          10             10        TZ    3.676e-06    8.944e-06                0.386               0.9391 
+          30             30        TZ    8.614e-06    2.673e-05               0.9044                2.806 
+         100            100        TZ    1.081e-05    3.119e-05                1.135                3.275 
+         300            298        TZ    1.577e-05    3.491e-05                1.655                3.665 
+        1000            985        TZ    1.696e-05    3.789e-05                 1.78                3.978 
+        3000           2905        TZ    1.838e-05     3.88e-05                 1.93                4.074 
+       10000           9709        TZ    2.076e-05    4.298e-05                2.179                4.512 
+       30000          29451        TZ    2.192e-05    4.392e-05                2.302                4.611 
+====================================================================== 
+ 
+ 
+We need a segment count sweep 🙁 
+And a bigger point sweep / random seeding random seeding is impossible  
+ 
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4854792/ 
+ALSO READ THIS 
+ 
+Because our data has like <1ms points of huge shear : like up to 75 Pa or greater, which for 
+repeated systole cycles this can be genuinely important for cumulative damage 
+​
+NAH 
+
+
+--- PDF PAGE 47 ---
+ 
+So pretty 
+ 
+ 
+ 
+6 Oct 2026
+ 
+We may need to consider sensitization in the hemolysis code 
+, as brief 
+P4P SCRIBBLES
+spikes of many dynes can be bad for platelets even though we don’t maintain those values 
+ 
+I’m getting the code to look into that now 
+ 
+Currently a 1M node hemolysis calculation is running to find the ‘convergence’ of the line 
+count, where after I can find a line count that I can use for all future tests. Following this I will 
+investigate what segment count is needed. 
+ 
+ 
+ 
+ 
+Volume Flow Rate Calculation 
+ 
+We make a new expression in CFD-Post with definition 
+ 
+area()@Opening * areaAve(Velocity)@Opening 
+ 
+For 3D 50cc Attempt 1: 0.000472695 [m^3 s^-1] 
+ 
+Technically wrong, this is better : areaInt( Velocity u * Normal X + Velocity v * Normal Y 
++ Velocity w * Normal Z)@Opening 
+ 
+
+
+--- PDF PAGE 48 ---
+Yields about 28 litres per minute !!!!!!!!!!  OH !!!!!!!!!!! OH NO !!!!!!!!!!! 
+https://chatgpt.com/c/6ac4818d-f788-83ec-84d7-d098ef3ead5b 
+IMPORTANT ! 
+ 
+ 
+ 
+ 
+
+
+--- PDF PAGE 49 ---
+ 
+ 
+ 
+ 
+So here are the 5 Systolic phases to test 
+0% 
+25% 
+50% 
+75% 
+100% 
+  
+VALIDATION !!!!! 
+ 
+ 
+ 
+Validation checklist: 
+Make sure the CO is physiological, internal pressure avg/max is, etc  
+ 
+Pathline / Segment Analysis Continued 
+ 
+https://chatgpt.com/c/6ac35d45-8e50-83ec-a0ca-58ab2fd88bc0 
+ 
+ 
+Requested 
+pathlines 
+HI2-GW 
+HI3-GW 
+HI2-HO 
+HI3-HO 
+All ≤5%? 
+1,000 
+20.64% 
+14.80% 
+17.87% 
+12.49% 
+No 
+2,000 
+0.09% 
+3.25% 
+3.82% 
+0.55% 
+Yes 
+3,000 
+15.28% 
+12.48% 
+11.49% 
+9.28% 
+No 
+
+
+--- PDF PAGE 50 ---
+4,000 
+4.56% 
+4.52% 
+2.80% 
+2.49% 
+Yes 
+5,000 
+1.10% 
+0.25% 
+0.89% 
+0.30% 
+Yes 
+6,000 
+5.10% 
+4.33% 
+2.74% 
+2.35% 
+No 
+7,000 
+6.16% 
+6.11% 
+5.41% 
+5.34% 
+No 
+8,000 
+0.47% 
+0.16% 
+1.24% 
+0.64% 
+Yes 
+9,000 
+6.53% 
+7.05% 
+5.10% 
+5.56% 
+No 
+10,000 
+1.02% 
+2.28% 
+1.05% 
+2.06% 
+Yes 
+ 
+ 
+ 
+ 
+Eventually  
+Check the final combination on the 35cc model by comparing 5k against a larger 
+count, such as 20k. If the comparison fails, increase the count. Agreement is a 
+practical sensitivity check, not a guaranteed error bound.  
+ 
+Asdpoadsp for pathlines noadniadonid 
+ 
+ 
+ 
+ 
+NEXT : do a step tolerance sweep 
+
+
+--- PDF PAGE 51 ---
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+7 Oct 2026
+6 lite 
+VERY GOOD: MATH FOR EJECTED-VOLUME WEIGHTED HEMOLYSIS SUM !!! 
+FOR WHOLE CYCLE HEMOLYSIS 
+ 
+In investigation plan markdown file  
+ 
+Tolerance_sweep_results.csv 
+ 
+ 
+Tolerance has an on average <5% variation from T, and the computation time barely 
+changes so I’m gonna leave it on the ANSYS default of 0.01 
+ 
+ 
+
+
+--- PDF PAGE 52 ---
+ 
+
+
+--- PDF PAGE 53 ---
+ 
+^ solution for diaphragm velocity at any given t_n 
+ 
+For each t, we:  
+ 
+Systolic 
+phase 
+Position through 20 mm 
+stroke 
+Diaphragm velocity 
+20% 
+1.91 mm 
+7.39 cm/s 
+40% 
+6.91 mm 
+11.95 cm/s 
+60% 
+13.09 mm 
+11.95 cm/s 
+80% 
+18.09 mm 
+7.39 cm/s 
+ 
+ 
+https://chatgpt.com/share/6ac5f562-9118-83ec-ae35-4d91df3dfa4b 
+^ public link for this conversation 
+ 
+ 
+ 
+
+
+--- PDF PAGE 54 ---
+ 
+Case 1 
+systolic phase = 20% 
+diaphragm geometry = x(0.20) 
+diaphragm velocity = v(0.20) 
+ 
+Case 2 
+systolic phase = 40% 
+diaphragm geometry = x(0.40) 
+diaphragm velocity = v(0.40) 
+ 
+Case 3 
+systolic phase = 60% 
+diaphragm geometry = x(0.60) 
+diaphragm velocity = v(0.60) 
+ 
+Case 4 
+systolic phase = 80% 
+diaphragm geometry = x(0.80) 
+diaphragm velocity = v(0.80) 
+
+
+--- PDF PAGE 55 ---
+1. Hemolysis Quantification is Superficial and Indirect 
+This is probably your biggest and most exploitable gap. 
+The paper uses wall shear stress (Pa) in a simplified tube as a proxy for hemolysis risk, 
+with a binary pass/fail against 150 Pa. This misses almost everything about how hemolysis 
+actually works in a TAH: 
+●​ No Hemolysis Index (HI) is ever calculated. The standard approach uses the 
+Giersiepen-Wurzinger power law model: HI% = C × τ^α × t^β, where τ is shear 
+stress and t is exposure time. The paper never applies this. 
+●​ No conversion to mg/100 L or g/100 L, so there's no comparison possible against 
+the NIH threshold (>0.1 g/100 L indicating hemolysis) or against the clinically 
+measured 37.15 ± 12.42 mg/100 L from the 50cc SynCardia — which you already 
+have from your meeting notes. That's a glaring gap. 
+●​ Their 2% shear stress criterion (comparing 35cc to 50cc outlet tube) failed, and they 
+simply accepted this because the other criterion passed. There's no discussion of 
+what that failure actually means physiologically. 
+Your gap to exploit: Compute a proper HI and convert to mg/100 L for direct clinical 
+comparison using your CFD data from the actual chamber geometry, not a tube. 
+2. CFD is on a Tube, Not the Ventricle Geometry 
+The CFD analysis was not performed on the 3D ventricular model — it was done on two 
+separate simplified cylindrical tubes representing only the outlet channel. This is a 
+fundamental limitation: 
+●​ No analysis of internal flow patterns, recirculation zones, or stagnation regions 
+inside the blood chamber, which are primary sites of hemolysis and thrombosis in 
+pulsatile TAHs. 
+●​ The diaphragm dynamics (which drive ejection and filling) are completely absent 
+from the fluid analysis. The moving boundary interaction with blood is a known driver 
+of hemolysis in pneumatic TAHs. 
+●​ No valve hemodynamics — mechanical heart valves (tilting disc or bileaflet) are 
+major hemolysis and thrombosis hotspots, and the paper doesn't address them at all. 
+●​ Steady-state flow was assumed. A TAH is inherently pulsatile — steady CFD 
+misses peak shear stress events during valve opening/closing and rapid ejection 
+phases. 
+Your gap: Running CFD on the actual 3D chamber with pulsatile boundary conditions and 
+moving-mesh or dynamic diaphragm modelling gives you results this paper cannot produce. 
+ 
+3. Two of the Four Engineering Requirements Were Never Verified 
+The paper explicitly states ejection fraction and cardiac output verifications were not 
+completed. This means: 
+
+
+--- PDF PAGE 56 ---
+●​ There is no demonstrated evidence that the 35cc design produces a cardiac output 
+in the 2.6–5.4 L/min range for the target age group. 
+●​ There is no demonstrated ejection fraction ≥ 0.61. 
+●​ The design is declared "feasible" based on only two of four requirements — size and 
+a partial hemolysis pass. 
+Your gap: Your flow loop directly measures cardiac output, and your CFD can estimate 
+ejection fraction. You will be the first to actually validate these for a sub-50cc TAH-like 
+device. 
+ 
+4. Cardiac Output is Not Normalized for Pediatric Patients 
+The paper cites a cardiac output target of 2.6–5.4 L/min (from Wu et al. 2016), which covers 
+a wide age range. For your target population (6–10 year olds): 
+●​ Cardiac index (L/min/m²) is the appropriate normalized metric for pediatric patients 
+and varies significantly with BSA. A 6-year-old and a 10-year-old have meaningfully 
+different requirements. 
+●​ Stroke volume is never explicitly verified either — your meeting notes correctly 
+identify 30–40 mL as a physiologically grounded target, but this paper doesn't state a 
+stroke volume target at all. 
+●​ Mean arterial pressure targets are also absent from the verification, despite being a 
+direct output of any real flow loop. 
+Your gap: Design your loop to target cardiac index per BSA rather than absolute cardiac 
+output, and measure MAP as a primary outcome. 
+ 
+5. No Physical Flow Loop or Mock Circulatory Loop Validation 
+The paper produces a non-operational 3D print and software-only verification. There is no: 
+●​ Mock circulatory loop (MCL) testing with blood analogue fluid 
+●​ Pressure–volume loop characterisation 
+●​ Measurement of stroke volume under realistic afterload/preload conditions 
+●​ Frank–Starling behaviour assessment (which they mention as important but never 
+test) 
+This is a textbook gap — computational predictions without experimental validation are 
+insufficient for medical device development, and the paper acknowledges this implicitly. 
+Your gap: Your physical flow loop is direct experimental evidence that no version of this 
+work has ever produced. 
+ 
+6. Right Ventricle is Entirely Unmodelled 
+
+
+--- PDF PAGE 57 ---
+The paper only models the left ventricle, with the stated assumption that the right ventricle is 
+"similar in design" and simply doubles the external volume. In reality: 
+●​ Right and left ventricular pressures differ significantly (pulmonary ~25 mmHg systolic 
+vs systemic ~120 mmHg) 
+●​ A properly functioning TAH must balance output between left and right to avoid 
+pulmonary oedema or systemic congestion 
+●​ The paper's 2–5% reduced right output noted in your meeting notes is clinically 
+relevant and never addressed 
+Your gap: Even a simplified two-chamber loop that demonstrates ventricular balance (or 
+quantifies imbalance) would be a novel contribution. 
+ 
+7. No Thrombosis Risk Analysis 
+Hemolysis and thrombosis are linked — regions of high shear cause haemolysis, while 
+regions of low shear and stagnation cause thrombus formation. The paper looks only at 
+peak shear stress and ignores: 
+●​ Residence time of blood in the chamber 
+●​ Recirculation regions near inlet/outlet junctions 
+●​ Valve wake regions 
+These are addressable with CFD post-processing (e.g. particle tracking, residence time 
+distribution). 
+ 
+Summary Table 
+Gap 
+Paper Status 
+Your Approach 
+Hemolysis Index (mg/100 
+L) 
+Not calculated 
+CFD power law + compare to 50cc 
+clinical data 
+CFD on actual chamber 
+geometry 
+Tube only, 
+steady-state 
+Full 3D, pulsatile 
+Cardiac output verified 
+Not completed 
+Flow loop measurement 
+Ejection fraction verified 
+Not completed 
+CFD + loop 
+Cardiac index 
+(BSA-normalised) 
+Not used 
+Age-specific targets 
+Physical experimental 
+validation 
+None 
+Flow loop 
+Right ventricle 
+Not modelled 
+Loop can address balance 
+
+
+--- PDF PAGE 58 ---
+Thrombosis / stagnation 
+Not assessed 
+CFD residence time 
+ 
+The strongest narrative for your project is probably: "this paper demonstrates feasibility of 
+size but fails to validate the hemodynamic and haematological performance of a downsized 
+TAH — we provide the first experimental and quantitative CFD evidence of those outcomes." 
+That's a clean and defensible research gap framing. 
+ 
+
+
+--- PDF PAGE 59 ---
+ 
+MIKAELA 
+SEVAN 
+ 
+INTRO 
+-> What project is about:​
+-> What is a total artificial heart 
+-> Briefly explain heart anatomy (ventricles, atria, etc).  
+-> Why is it needed (talk about lack of heart donors… needed as BTT option… an example 
+is biventricular heart failure…) 
+-> An example of TAH is Syncardia (briefly explain FDA approved, pulsatile airflow from 
+external driver, etc) 
+-> Talk about physical requirements to be a candidate for TAH (BSA + T10)...  
+-> Talk about GAPS IN KNOWLEDGE, specifically how people are not eligible for 70cc and 
+50cc (could talk about parameters for 50cc)... but some people who cannot be eligible 
+includes pediatrics, people with chest disease, etc. 
+ 
+INTRO UPDATED: 
+●​ Firstly, what is heart failure… say how heart needs to pump blood (HH) 
+●​ Briefly explain heart anatomy… how the heart functions (introduct atria, ventricles, 
+maybe how our diaphragm contraction/expansion causes heart function) 
+ 
+-​
+Explain what MCS is… system to assist heart or lung functions. 
+-​
+Used as bridge to transplant or bo temporarily replaceridge to destination therapy 
+-​
+TAH are a specific MCS that functions when the majority of the native heart must be 
+replaced, usually used when failure on both sides of the heart.  
+-​
+Last resort… often have acute or irreversible biventricular heart failure with a high 
+risk of death 
+ 
+-​
+We will focus on SynCardia Total Artificial Heart (only FDA approved heart… used in 
+patients with end stage biventricular heart failure) 
+-​
+Other reasons it might be evaluated for patients… in anticipation for heart 
+transplants, other diagnosis like cardiomyopathy (heart muscle difficult to pump 
+blood), myocarditis (heart muscle inflammation that causes muscle weakness) and 
+other diseases. 
+-​
+“ This is a pulsatile flow total artificial heart that uses an external pulmonary driver.”... 
+pull up schematic of TAH 
+-​
+List of potential schematics to use:​
+ 
+-​
+Briefly explain Syncardia, how it consists of 2x ventricle chambers that house 
+blood… with each ventricle having in/outlet valves and a diaphragm base. 
+ 
+
+
+--- PDF PAGE 60 ---
+ 
+ 
+-​
+Explain how during implantation… both native ventricles are removed… inflow cuffs 
+are attached to respective atria and outflow grafts attached to the vena respective 
+artery/veins. 
+ 
+ 
+-​
+Further describe Syncardia including: shape of ventricle + material (SPUS outer 
+shell, inner dacrom mesh), valve description + material (titanium housing, pyrolytic 
+carbon disc, single pivoting disc that controls blood flow), bottom deforming 
+diaphragm encased in a SPUS base assembly, PVC/SPUS air hose that connects to 
+external driver. 
+ 
+-​
+See visual diagram of Syncardia hooked in patient. Ventricle chambers attached, 
+hole in chest for air hose + external portable driver. External driver acts as our native 
+diaphragm, to move the SPUS diaphragm in ventricle and cause blood flow. Another 
+image of it IRL 
+ 
+
+
+--- PDF PAGE 61 ---
+ 
+ 
+ 
+-​
+There are also limitations & issues with TAH 
+-​
+Infection… leading cause of adverse reactions in TAH. Mostly due to driveline exit for 
+the external driver 
+-​
+Stroke…  
+-​
+Bleeding… 
+-​
+Haemolysis…  
+-> Lead this into students who attempted 35cc heart… however this opens up more research 
+questions… specifically their method of validation was not that good (further explain!!!) 
+-> This lead to the overall goal of the project: How downsizing methodology SynCardia 
+Total Artificial Heart affects flow characteristics / haemolysis 
+​
+- we apply this to the 35cc study largely 
+-> This requires CFD studies… 
+ 
+​
+HYPOTHESIS: 
+-​
+Briefly explain what haemolysis is, measured in NIH -> ASTM equation 
+-​
+From literature we have observed a trend that heart size decreases, fluid shear 
+increases, (..as well as blood pressure?) for a given flow rate, increasing hemolysis 
+risk 
+ 
+PARAMETERS: 
+-​
+Flow rate === 5L/min etc  
+ 
+-​
+Mention how our scope is purely for left ventricle, because it operates at a higher 
+pressure compared to right ventricle 
+ 
+METHODOLOGIES (How we are doing this) 
+ 
+-​
+Go over all of the 2D/3D steps (2D to validate the concept… further improving mesh 
+and analysing trends in haemolysis as you change flow rate and relate to hypothesis 
+ 
+
+
+--- PDF PAGE 62 ---
+ 
+of increasing haemolysis as … etc NOTE WE CANNOT COMPARE NUMBERS TO 
+3D LITERATURE, ONLY TRENDS. Then doing 3D steady state.. THIS ONE WE 
+CAN COMPARE NUMBERS TO LITERATURE).  
+-​
+We will use ANSYS CFX, briefly explain current 50cc CAD shape and how it is 
+informed by literature 
+-​
+Explain method of downscaling… say that we will look @ literature more… point out 
+TAH parameterised features such as chamfer etc.(Talk volumetric vs geometric 
+downscaling).  
+ 
+-​
+Then Sevan to go into pathline stuff hemolysis (cfd exclusive!!) 
+ 
+ 
+-​
+Hey transient sims are like. .. .really good !! but only if we can we actually do it !!! 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+--- PDF PAGE 63 ---
+ 
+INTRO 
+ 
+(introduce ourselves  ! supervisor is Rajnish Sharma) 
+ 
+Firstly, what are total artificial hearts? Total artificial hearts are a form of mechanical 
+circulatory support system - being a device that assists the heart in pumping blood through 
+the body.  
+HELLO THIS IS THE OLD SCRIPT 
+I’m just gonna go off the new bullet points ive made in the ‘conference plan’ and time 
+what i currently have. ohhhhhhh  
+How the heart functions: deoxygenated blood enters the heart from the body through the 
+Vena cava. It enters the right atrium, to the right ventricle, oxygex`nated in the lungs, 
+re-entering to the left at​
+rium, left ventricle then leaving the body.  
+ 
+Total artificial hearts are used as bridge to therapy device for patients with bi-ventricular 
+heart failure, waiting for a heart transplant as a last case, temporary solution.  
+ 
+Our project focuses on the Syncardia Total Artificial Heart, the only FDA approved TAH. This 
+is a diaphragm driven, pulsatile flow total artificial heart that uses an external pulmonary 
+driver.  
+I’ve more or less done the intro (m 
+Prior to implantation, patients must have the required BSA (Body Surface Area) and T10 
+measurements. These are metrics to determine if patients are elligible for Total Artificial 
+Heart usage. The way BSA is calculated takes into account both patient height and weight, 
+while T10 checks if the device can physically fit in the patient.  
+ 
+Syncardia have 70cc and 50cc variants. The 50cc variant is eligible for patients with a BSA 
+less than 1.85m^2 and a T10 measurement less than 10cm. A gap in knowledge we’ve 
+identified are patients not elligible for the 50cc Syncardia - including pediatrics, patients with 
+chest abnormalities, etc. 
+ 
+METHODOLOGY - 2D SIMS 
+ 
+We will be using ANSYS CFX for haemolysis comparison and flow patterns, largely finding 
+high areas of shear and pathline tracking. 
+ 
+We will start with 2D steady state simulations of a simplified 50cc model. This will act as a 
+validation for proof of concept - basically that we can use CFX for haemolysis analysis. We 
+will simulate blood flow at varying flow rates, comparing these results to literature to validate 
+the simulation. We will also use 2D for mesh study and validation - refining mesh to check 
+for element quality, skewness… ensure  simulation reliability. We compare trends and not 
+direct NIH numbers because data from 2D simulations is not applicable to 3D literature 
+simulations.  
+ 
+Areas where mesh quality would be most important include around valves and diaphragm 
+boundaries - as these are the areas that experience the highest shear stress. This will also 
+determine the correctness of our hypothesis - whether haemolysis increases with flow rate.​
+ 
+ 
+
+
+--- PDF PAGE 64 ---
+ 
+ 
+These slides show our current 2D simulation files, the first one shows the diaphragm at full 
+extension during peak fluid outflow, the second shows the diaphragm at full contraction 
+during peak fluid inflow. We chose these two diaphragm positions as they are at the cycle’s 
+extremes - simulation greatest potential shear throughout the cycle.  
+ 
+These part files are informed by literature and include simplifications as content is IP locked.  
+-​
+Simplifications include how valves shall be rectangular blockages, assuming most 
+shear occurs due to the valve lid itself (shear from hinges are negligible at this 
+stage). 
+-​
+Assume closed valve will be wall boundary conditions - assumption that there are no 
+valve leakage during closed position, or that it is negligible at this stage.  
+-​
+Parametric features we will change adjust include the graft fillets (areas where the 
+ventricle chamber connect to the outflow tubes). This is important because the abrupt 
+change in geometry can create flow disturbances, large change in velocity and flow 
+separation… all leading large potential shear.  
+-​
+In addition, there are current conflicts in the part geometry where the valve lid 
+clashes with the diaphragm at full ejection… changing so would affect shear 
+potential. 
+ 
+The specific simulation settings, for example boundary conditions, etc… shall require further 
+research. Because of this, this the initial 2D simulations will be an iterative process.  
+ 
+ 
+METHODOLOGY - 3D SIMS 
+We will move on to 50cc 3D steady state simulations. Being 3D, these simulations are a 
+better reflection of literature - therefore we are able to compare both haemolysis trends and 
+specific simulated NIH values with literature.  
+ 
+When our 50cc simulations are completed, we will created a downscaled 35cc model - 
+comparing these simulation results with the previous 50cc to analyse how downscaling 
+affects shear .  
+ 
+INTRO​
+1. What are total artificial hearts... MCS... assist pump blood 
+2. Explain how heart functions: right atria -> ventricle.... left ventricle.. 
+3. BTT for bi-ventricle heart failure... waitlist transplant 
+4. Focus on Syncardia... FDA approved... diaphragm, pulsatile flow 
+5. Must have BSA + T10 measurement for elligibility... height/weight... physicall fit 
+6. 70cc and 50cc variant... list measurements... GAP is identified patients not elligible for 
+50cc... pediatrics and chest wall deformities 
+ 
+METHODOLOGY - 2D​
+1. Using ANSYS CFX for haemolysis comparison, flow patterns and large areas of shear.  
+ 
+2. 2D steady state sim... validation of proof of concept. 
+3. Sim blood flow at varying flow rates... comparing trend we see to trend in litereature.  
+ 
+ 
+
+
+--- PDF PAGE 65 ---
+ 
+4. Mesh study and validation (element quality & skewness)... smulation reliability. 
+5. Not compare NIH results directly bc 2D comparison NOT applicable to 3D literature. 
+6. Mesh quality importance... valve & moving diaphragm... areas with highest shear stress.  
+7. 2D sim... test hypothesis of increasing haemolysis with increasing flow rate.  
+ 
+8. Current 2D sim files... explain 
+9. Chose positions... cycle extremes... greatest potential shear 
+ 
+10. Simplification & assumptions: 
+- Valve rectangle... most shear on lid (hinge negligible) 
+- Closed valve is wall (leakage negligible) 
+- Parametric feature... graft fillet... geometry change... velocity change & flow separation... 
+affect potential shear. 
+- There is current valve conflict... change hinge position. 
+ 
+Iterative process. Sim settings need further research 
+ 
+METHODOLOGY 3D​
+1. 50cc 3D steady state simulations 
+2. 3D better reflect literature... compare trend AND NIH results 
+3. 50cc complete... downscale to 35cc part. Compare 2 sims... analyse how downscaling 
+method and design affects shear and haemolysis potential. 
+ 
+ 
+ 
+
+
+--- PDF PAGE 66 ---
+ 
+After KNOWLEDGE GAPS 
+ 
+-​
+Therefore there’s a clinical need for downsized TAH systems SLIDE 3 
+-​
+Study for hypothetical 35cc SynCardia in 2020 by The University of Akron 
+-​
+This study verifies the anatomical feasibility for fitment in 6-10 year old 
+patients based on cardiac volume, approximating to a T10 distance of 
+~7.5cm (src, not verified with paediatric bsa/t10 regression lol) (crucial 
+anterior-posterior dimension for fitment) 
+-​
+Analysed flow in the inlet/outlet tubes without valve or diaphragm dynamics, 
+leading us to ask the question of if this TAH model can provide the 
+required cardiac output while maintaining acceptable hemodynamics 
+and flow characteristics 
+-​
+SLIDE 4 Overall goal of the project is to investigate how downsizing 
+methodologies in a SynCardia TAH affects flow characteristics and hemolysis, 
+largely in the context of 35cc ventricle volume, to explore if the design is 
+feasible 
+ 
+-​
+Hemolysis SLIDE 5 
+-​
+Damage of red blood cells, which is a key issue in mechanical circulation 
+like with TAHs, releases their oxygen-carrying hemoglobin into the blood 
+plasma, which in high amounts can lead to fatal loss of oxygen delivery to 
+organs. The chronic symptoms of moderate hemolysis for TAH patients are 
+very negative for quality of life. 
+-​
+Typically calculated as the ratio of free hemoglobin to total haemoglobin, 
+the hemolysis index % !! 
+-​
+However in the absence of real blood testing, we approximate this value 
+from CFD, through measuring the scalar shear stresses of the flow, 
+because fluid shear is difficult to measure irl 
+-​
+We predict that as we decrease the geometry of the heart, the fluid shear and blood 
+pressure for a given flow rate will rise, increasing hemolysis risk 
+ 
+-​
+SLIDE 6 Our CFD studies will have the following parameters to test for this 
+-​
+Our scope is left ventricle testing only because it’s the highest pressure/flow 
+ventricle, its most crucial for hemolysis 
+-​
+Flow rate will be tested up to 5L/min, common cardiac output for native hearts 
+-​
+Ventricular pressure of 180-200mmHg, which is the systole stroke 
+-​
+Output is scalar shear stress, pressures, and flow characteristics across the 
+geometry of our TAH model 
+ 
+METHODOLOGIES 
+ 
+-​
+Downscaling methods ! SLIDE 9 
+-​
+Geometric vs volumetric → V proportional to L^3, a scale factor of 0.7 the 
+length, results in a 0.34 scaling of volume 
+-​
+We have gentle gradations/chamfers around the inlets and outlets, those 
+are not parameterized by the literature and we can investigate their effect on 
+fluid characteristics 
+ 
+ 
+
+
+--- PDF PAGE 67 ---
+ 
+ 
+-​
+Hemolysis methodologies SLIDE 10 
+-​
+Heuser–Opitz power-law model for % of damaged red blood cells, which 
+relates shear stress to exposure time with empirically derived constants 
+-​
+But wait ! given the variation in flow, the power law equation breaks down 
+-​
+we will need to sum exposure times for multiple shear values experienced at 
+different points in the flow 
+ 
+-​
+SLIDE 11 We will do this by exporting the pathlines of the flow and 
+breaking them into fixed time segments with local sheer for that region !! we 
+will then get a more accurate average hemolysis index percent 
+-​
+We can compare this dimensionless value to literature by approximating it 
+to real blood damage with the Normalized Index of Hemolysis !! 
+ 
+
+
+--- PDF PAGE 68 ---
+ 
+Notes: ADD SLIDE NUMBERS PER BULLET / TABULATE 
+ 
+-​
+Heart disease is becoming increasingly common 
+ 
+-​
+End-stage heart failure renders the native heart unviable for pumping blood, the 
+gold standard therapy is a heart transplant 
+ 
+-​
+Donor hearts do not meet this demand, with long wait times for receiving patients 
+resulting in death 
+ 
+-​
+TAHs are gaining traction as a legitimate biomedical technology, offering an as a 
+bridge to transplant therapy (for transplant later) or destination (forever) therapy 
+for contraindicated patients with antibodies against donor hearts 
+ 
+-​
+One such TAH is the SynCardia, the only FDA-approved TAH, it works by replacing 
+each ventricle with a chamber that pumps blood with a pneumatically actuated 
+diaphragm, connected by an externally-worn driver. It is pulsatile (like a beating 
+heart) and has two valves per chamber. 
+ 
+-​
+Limitations exist for the SynCardia, it’s available as medium 50 cubic centimetre (cc) 
+and large 70cc volume, requiring adequate room/anatomical compatibility inside 
+your chest (thoracic cavity) to be implanted successfully 
+-​
+Thoracic cavity distance between your tenth spinal disk and your ribcage 
+(T10 distance) must be greater than 10cm to fit the (50cc) device, generally 
+ok, but access issue for pediatrics or people with chest deformities 
+-​
+Hemolysis is a form of blood damage caused by mechanical stresses, 
+which are caused in excess by TAHs. Hemolysis increases clotting risk, and 
+requires blood thinners to prevent stroke, but exacerbates existing bleeding, 
+leading to a mortality risk!! 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+--- PDF PAGE 69 ---
+ 
+-​
+“So what’s the catch?” I hear you thinking. Why don’t we all just get a 
+SynCardia ?  SLIDE 4 LIMITS 
+-​
+The technology still has a lot of limitations, it’s available only 50 cubic centimetre (cc) 
+and 70cc chamber size, requiring adequate room/anatomical compatibility inside 
+your chest (thoracic cavity) to be implanted successfully 
+-​
+Thoracic cavity distance between your tenth spinal disk and your ribcage 
+(T10 distance) must be greater than 10cm to fit the (50cc) device, generally 
+ok, but access issue for pediatrics or people with chest deformities 
+-​
+Hemolysis is a major issue. It’s a form of blood damage caused by 
+mechanical stresses, which are caused in excess by TAHs. Hemolysis 
+increases clotting risk, and requires permanent use of blood thinners to 
+prevent stroke, but exacerbates existing severe TAH side effects such as 
+bleeding, leading to unwanted mortality risk!! 
+-​
+These side effects contribute to a survival rate that is not fantastic, at around 
+74% survivorship in the first month and 51% at 12 months 
+ 
+-​
+SLIDE 5 CLINICAL NEED Therefore there’s a clinical need for downsized TAH 
+systems 
+-​
+We predict that device size and hemolysis severity are closely 
+connected, making this tricky 
+-​
+We’ve been inspired by this study for a hypothetical 35cc SynCardia in 
+2020 by The University of Akron 
+-​
+This study verifies the anatomical feasibility for implantation in 6-10 year 
+old patients, approximating to a T10 distance of ~7.5cm (src, not verified 
+with paediatric bsa/t10 regression lol) (crucial anterior-posterior dimension for 
+fitment), which is a huge jump from the 10cm requirement of the smallest 
+approved SynCardia today 
+-​
+BUT the study opens unanswered questions still for if the device can perform 
+appropriately at this volume, and operates at acceptable hemolysis risk in 
+doing so 
+ 
+-​
+SLIDE 6 AIM  
+-​
+Overall goal of the project then is to investigate how downsizing 
+methodologies in a SynCardia affects flow characteristics and 
+hemolysis, largely in the context of a 35cc ventricle volume, exploring 
+the feasibility of this TAH design as an appropriate pumping system 
+ 
+SLIDE 10 DOWNSIZING 
+-​
+Hi its me again 
+-​
+Downsizing isn’t as simple as putting a multiplier on the SynCardia CAD file 
+-​
+There’s a complex relationship here that will affect hemolysis risk, as smaller 
+flow volumes increase sheer, which is the driving variable for calculating 
+hemolysis 
+-​
+We’ll look at Geometric vs volumetric scaling → V is proportional to L^3, making 
+a scale factor of 0.7 the length result  in a 0.34 scaling of volume, which could 
+unnecessarily raise hemolytic potential giving us choices for what we want to 
+minimize and maximize when scaling 
+ 
+
+
+--- PDF PAGE 70 ---
+ 
+-​
+Parameterized areas are also subject to downscaling variations, as discussed 
+earlier 
+-​
+We have gentle gradations/chamfers around the inlets and outlets, those are not 
+parameterized by the literature (IP-locked) and we can investigate their effect on 
+fluid characteristics by varying their dimensions 
+ 
+ 
+-​
+SLIDE 11 and 12 PATHLINES 
+-​
+To ultimately calculate hemolysis, we will use CFX post-processing to 
+export simulation pathline data with attached shear, to simulate each 
+pathline as a blood cell experiencing local shear that we will sum for 
+the average hemolysis, this data will give us a clinically comparable 
+value of Hemolysis Index percentage, and can approximate a 
+normalized index for real damage, answering our investigation 
+questions 
+ 
+ 
+ 

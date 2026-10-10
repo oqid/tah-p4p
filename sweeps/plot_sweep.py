@@ -24,7 +24,8 @@ import pandas as pd
 
 LINESTYLES = {"HI2": "--", "HI3": ":"}          # paper: HI1 dotted, HI2 dashed
 MARKERS = {"GW": "o", "HO": "s", "TZ": "*"}
-COLOURS = {"GW": "tab:blue", "HO": "tab:orange", "TZ": "tab:green"}
+# Match the tolerance sweep's muted pride-inspired colors for GW and HO.
+COLOURS = {"GW": "#D98255", "HO": "#C56A91", "TZ": "#8064A2"}
 SWEEP_DIR = Path(__file__).resolve().parent
 
 
@@ -38,7 +39,12 @@ def main():
                     help="hi = HI%% (default), nih = mg/100L")
     ap.add_argument("--x", choices=["streamlines", "requested"], default="streamlines",
                     help="x axis: actual streamlines exported (default) or requested N")
-    ap.add_argument("--colour", action="store_true", help="colour by constant set")
+    colour_group = ap.add_mutually_exclusive_group()
+    colour_group.add_argument("--colour", dest="colour", action="store_true",
+                              help="colour by constant set (default)")
+    colour_group.add_argument("--monochrome", dest="colour", action="store_false",
+                              help="render all curves black")
+    ap.set_defaults(colour=True)
     ap.add_argument("--linear-y", action="store_true")
     ap.add_argument("--y-limits", nargs=2, type=float, metavar=("MIN", "MAX"),
                     help="set y-axis limits, useful for comparing sweep plots")
