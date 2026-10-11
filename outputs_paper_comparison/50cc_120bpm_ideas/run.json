@@ -1,0 +1,111 @@
+{
+  "status": "complete",
+  "comparison_context": "Same-BPM comparison",
+  "cases": [
+    {
+      "id": "g0_00",
+      "group": 0,
+      "label": "50 cc",
+      "phase": 16.67,
+      "bpm": 120.0,
+      "cardiac_output_l_min": null,
+      "path_id_p50": 2446,
+      "path_id_p95": 3942,
+      "path_id_p99": 227,
+      "n_paths": 4903,
+      "sampled_spatial_paths": 200,
+      "input": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_1667%.csv",
+      "sha256": "64bb9278fb46a973881ba062df07df659db8688d5f3b417687495f1303bfd0e6"
+    },
+    {
+      "id": "g0_01",
+      "group": 0,
+      "label": "50 cc",
+      "phase": 33.33,
+      "bpm": 120.0,
+      "cardiac_output_l_min": null,
+      "path_id_p50": 4746,
+      "path_id_p95": 2746,
+      "path_id_p99": 614,
+      "n_paths": 4916,
+      "sampled_spatial_paths": 200,
+      "input": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_3333%.csv",
+      "sha256": "372cb6251cf8da61f46dbfa14ebee57d1381f62f2c3396705bacf8d52e07e685"
+    },
+    {
+      "id": "g0_02",
+      "group": 0,
+      "label": "50 cc",
+      "phase": 50.0,
+      "bpm": 120.0,
+      "cardiac_output_l_min": null,
+      "path_id_p50": 4510,
+      "path_id_p95": 37,
+      "path_id_p99": 1021,
+      "n_paths": 4915,
+      "sampled_spatial_paths": 200,
+      "input": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_5000%.csv",
+      "sha256": "c6cea35c25b6fa3729488e6bf09b540743086211f62ec0a61b5e4436d8670e8a"
+    },
+    {
+      "id": "g0_03",
+      "group": 0,
+      "label": "50 cc",
+      "phase": 66.67,
+      "bpm": 120.0,
+      "cardiac_output_l_min": null,
+      "path_id_p50": 1431,
+      "path_id_p95": 2472,
+      "path_id_p99": 3535,
+      "n_paths": 4890,
+      "sampled_spatial_paths": 200,
+      "input": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_6667%.csv",
+      "sha256": "9e3a19cfcd49f6dd9c04e29fd184165aafe7c658c90a0b1bb4a962a699901f37"
+    },
+    {
+      "id": "g0_04",
+      "group": 0,
+      "label": "50 cc",
+      "phase": 83.0,
+      "bpm": 120.0,
+      "cardiac_output_l_min": null,
+      "path_id_p50": 833,
+      "path_id_p95": 4685,
+      "path_id_p99": 3431,
+      "n_paths": 4861,
+      "sampled_spatial_paths": 200,
+      "input": "C:\\Users\\kingk\\Documents\\tah-p4p\\z_inputs\\haemline_50cc_8300%.csv",
+      "sha256": "9c9fcd040db4e86fae3f6b87c68fb3c3a918ef99202bda343a1e733ea656a718"
+    }
+  ],
+  "data_root": "C:\\Users\\kingk\\Documents\\tah-p4p\\outputs_paper_comparison\\50cc_120bpm_ideas",
+  "HI_primary_weighting": "equal path",
+  "source_papers": {
+    "Taskin": "papers/taskin-etal.pdf",
+    "Marom": "papers/marom-etal.pdf"
+  },
+  "constants": {
+    "GW": {
+      "A": 3.62e-05,
+      "alpha": 2.416,
+      "beta": 0.785,
+      "tau_max_Pa": 255.0,
+      "t_max_s": 0.7
+    },
+    "HO": {
+      "A": 1.8e-06,
+      "alpha": 1.991,
+      "beta": 0.765,
+      "tau_max_Pa": 700.0,
+      "t_max_s": 0.7
+    },
+    "TZ": {
+      "A": 1.228e-05,
+      "alpha": 1.9918,
+      "beta": 0.6606,
+      "tau_max_Pa": 320.0,
+      "t_max_s": 1.5
+    }
+  },
+  "script_sha256": "13d5d455817c9921a8784f5420bd97bd5209acca19450d0287355b1dfda5b19a"
+}

@@ -132,3 +132,33 @@ frozen-flow populations, not particles tracked through a transient cycle.
 Distribution plots give each reconstructed path equal weight; HI uses the
 existing inlet-speed weighting. Late-time statistics exclude ended paths, and
 percentile bands show population spread rather than confidence intervals.
+
+## Paper-inspired comparison plots
+
+`haem5_paper_comparison.py` is a separate experimental plotting entry point with
+equal-path HI as its primary summary. It generates twelve figures inspired by
+Taskin and Marom, a local HTML gallery, per-path tables and discussion metrics.
+
+```powershell
+python haem5_paper_comparison.py z_inputs --label "50 cc" --bpm 120
+
+# When the 35 cc exports are available (replace folder name as needed):
+python haem5_paper_comparison.py z_inputs --comparison-folder z_inputs_35cc --comparison-label "35 cc" --bpm 120 --comparison-bpm 120
+
+# Redraw from cached data into a new timestamped output folder:
+python haem5_paper_comparison.py --replot outputs_paper_comparison/50cc_120bpm_ideas
+```
+
+The primary HI summary is the arithmetic mean over reconstructed paths. A
+separate sensitivity figure compares it with the inlet-speed-weighted mean.
+The model/constant comparison uses GW, HO and TZ for both HI2 and HI3. SA plots
+use ordinary linear axes and a direct percentage-above-cutoff view. Each run
+saves a README explaining the figures and their interpretation.
+
+For matched cardiac output, supply the corresponding simulations and their
+actual BPMs, `--cardiac-output-l-min`,
+`--comparison-cardiac-output-l-min`, and
+`--comparison-context "Matched cardiac output"`. These flags record metadata;
+they do not rescale or change the CFD flow field. Nominal device capacity alone
+is not a measurement of delivered stroke volume. The first 35/50 cc comparison
+is intended at 120 BPM for both, followed by a separate matched-output run.
