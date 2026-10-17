@@ -1,0 +1,1 @@
+areaAve(Shear Strain Rate)@Aortic Valve as Monitor Variable in simulation

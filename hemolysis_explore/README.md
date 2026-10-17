@@ -96,7 +96,7 @@ This supports a design discussion focused on the valve. Mean stress over the who
   - Say that their HI3 is uncertain: the exposure is probably real (blood near the valve), but the path is cut short.
 * **Velocity floor:** never active (under 3e-6 of total time). The 1% speed floor does not affect any result here.
 * **c) Stress sampling:** 2–9% of the dose sits in segments where τ changes by more than 2× between consecutive points, with the most at 50%. That is acceptable, but it is the next thing to refine (more export segments near the valve).
-* **d)** The highest-dose segments are 0.005–0.1 mm long, so they are well resolved compared with the median segment length of about 1.3 mm.
+* **d)** *Corrected:* an earlier version of this panel plotted densities on log-spaced bins, which exaggerated the short segments. Weighted by dose, the median segment length is about 1 mm at most phases (0.1 mm at 50%), similar to the overall median of 1.2–1.45 mm. The export is therefore no finer where the damage accumulates, and refining the segment count near the valve is the next numerical check.
 * **Sampling spread:** the bootstrap 95% CI on mean HI3 is about ±10–25%, because the distribution is heavy-tailed. A test run comparing 50 cc with itself gave ratio CIs of about 0.7–1.4. **A 35 cc vs 50 cc difference smaller than about ±40% at a single phase cannot be distinguished from path-sampling noise.** Report the geometric mean or median alongside the mean.
 
 ## 06 Scaling hypothesis for 35 cc (testable before the CFD exists)
@@ -146,28 +146,37 @@ Key result once the valve angles were known: HI3 falls as inflow rises, but trac
 
 * CFD-Post ends streamlines on hard wall contact. Paths that stop at the valve ring therefore have a truncated (lower-bound) exposure, so results are shown with and without them.
 
-## Approximate cardiac output from outlet snapshots
-
-Run from the repository root:
+## 35 cc comparison (17 Oct 2026)
 
 ```powershell
-python hemolysis_explore/estimate_cardiac_output.py
-# Optional machine-readable result:
-python hemolysis_explore/estimate_cardiac_output.py --json-output outputs/outlet_cardiac_output.json
-# Override phases/flows or timing when using another simulation set:
-python hemolysis_explore/estimate_cardiac_output.py --phases 16.67 33.33 50 66.67 83 --flows 9.32064 16.35774 20.18532 19.28142 12.1371 --bpm 120 --systole-seconds 0.25
+cd hemolysis_explore
+python run_haem5_batch.py outputs\35cc_haem5 ..\35cc_inputs\120BPM\*.csv ..\35cc_inputs\171BPM\*.csv
+python explore_hemolysis.py --case "50 cc" ..\z_inputs 120 --case "35 cc 120 BPM" ..\35cc_inputs\120BPM 120 --case "35 cc 171 BPM" ..\35cc_inputs\171BPM 171 --outdir outputs\35cc_comparison_all_paths
+python cardiac_output_cases.py outputs\cardiac_output        # optional: folder_50 folder_35_120 folder_35_171
+python compare_figures.py --case "50 cc 120 BPM" ..\z_inputs 120 1.0 --case "35 cc 120 BPM" ..\35cc_inputs\120BPM 120 0.888 --case "35 cc 171 BPM" ..\35cc_inputs\171BPM 171 0.888 --monitor "..\35cc_inputs\Shear Strain Rate Convergence Oscillation 35cc 83% 120BPM\variableoutput.csv"
 ```
 
-The supplied outlet flows (L/min) are paired in order with phases **16.67, 33.33, 50, 66.67 and 83% of systole**, matching this folder's phase definitions. The final phase is 83%, not 83.33%. Defaults are 120 bpm and a systolic fraction of 0.5 (250 ms). The script adds assumed zero-flow endpoints at 0% and 100% and assumes zero outlet flow throughout diastole. Signed outward flows should be used if replacing the input data.
+* `outputs/35cc_RESULTS.md` collects every number from this run.
+* The loader now reads phases from names like `35cc 120BPM 16.67%.csv`. It snaps the 50 cc `_8300%` file to 83.33%.
+* Flow and cardiac output come from the inlet (seed speed × dome area). The Sim Tracker's 35 cc outlet integrals violate mass conservation, so they are not used.
 
-With phase fraction f and systole duration Ts in seconds:
+### Per-case report figures and the three-case figures
 
-- I = integral from 0 to 1 of Q(f) df, the mean systolic outlet flow in L/min.
-- Stroke volume = I × Ts × 1000/60, in mL/beat.
-- Cardiac output = stroke volume × bpm/1000, in L/min.
+```powershell
+# full F1–F7 + A1–A5 set for each 35 cc case (--scale sets the geometry in F1 and the valve diameter)
+python report_figures.py ..\35cc_inputs\120BPM --label "35 cc 120 BPM" --bpm 120 --scale 0.888 --outdir report_figs\35cc_120BPM
+python report_figures.py ..\35cc_inputs\171BPM --label "35 cc 171 BPM" --bpm 171 --scale 0.888 --outdir report_figs\35cc_171BPM
+```
 
-Shape-preserving cubic interpolation (PCHIP, integrated analytically interval by interval) gives **54.959 mL/beat and 6.5951 L/min**. Piecewise linear interpolation (trapezoidal integration) gives **53.534 mL/beat and 6.4241 L/min**. The approximately 2.6% difference relative to PCHIP describes interpolation sensitivity, not a confidence interval or total error bound. The script implements PCHIP using NumPy and does not require SciPy.
+`compare_figures.py` writes into `report_figs`:
 
-This estimate uses measured outlet flow, separately from the diaphragm-boundary estimate in `operating_point.stroke()` (about 55.5 mL/beat, or 6.7 L/min). The inlet boundary combines sinusoidal speed with a phase-dependent dome area, so its flow need not be a pure sine. Neither nominal chamber size nor the arithmetic mean of the five outlet values is a cycle-integrated cardiac output.
+| Figure | File | What it shows |
+|---|---|---|
+| C1 | `size_comparison`, `size_comparison_completed` | 35/50 HI3 ratio per phase with CIs and the similarity bands |
+| C2 | `size_dose_maps` | dose maps of all three cases side by side |
+| C3 | `size_lysis_sa` | SA distributions and lysis safety factors |
+| C4 | `convergence_monitor` | the 35 cc solver oscillation |
+| C5 | `size_mechanism` | the F2 b/c mechanism plot for all three cases: HI3 against inflow and against valve angle |
+| C6 | `size_lysis_envelopes` | the F7 empirical-lysis plot with one panel per phase and all three cases |
 
-Unmeasured transient effects, flow near the endpoints, and diastolic regurgitation remain unresolved. Changing bpm or systolic duration here only changes the timing assigned to the fixed outlet samples; it does not predict new flow amplitudes at another operating point. At fixed systolic fraction and fixed sample flows, calculated cycle-mean output is independent of bpm because systole duration changes inversely with bpm.
+Use `--only C5` (for example) to rebuild just one of them.

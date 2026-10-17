@@ -496,8 +496,10 @@ def fig_numerical_audit(case: Case, out: Path):
         ok = ~first
         hi = ok & (inner > np.percentile(inner[ok], 99))
         bins = np.logspace(-3, 1, 50)
-        axs[3].hist(seg[ok], bins=bins, histtype="step", color=st["color"], lw=0.8, ls=":", density=True)
-        axs[3].hist(seg[hi], bins=bins, histtype="step", color=st["color"], lw=1.6, density=True)
+        axs[3].hist(seg[ok], bins=bins, histtype="step", color=st["color"], lw=0.8, ls=":",
+                    weights=np.full(ok.sum(), 100.0 / ok.sum()))
+        axs[3].hist(seg[ok], bins=bins, histtype="step", color=st["color"], lw=1.6,
+                    weights=100.0 * inner[ok] / inner[ok].sum())
         last = s.offsets[1:] - 1
         rows.append({"case": case.label, "phase_pct": s.phase, "n_paths": len(p),
                      "n_incomplete": int(inc.sum()), "frac_incomplete": float(inc.mean()),
@@ -531,9 +533,9 @@ def fig_numerical_audit(case: Case, out: Path):
     axs[2].set_ylabel("Share of GW dose in segments ≥ this ratio")
     axs[2].axvline(2, color=MUTED, ls="--", lw=1)
     axs[2].legend(title="phase", fontsize=8)
-    axs[3].set_title("d) Segment length: all (dotted) vs top-1% dose segments (solid)")
+    axs[3].set_title("d) Segments (dotted) and dose (solid) by segment length")
     axs[3].set_xscale("log")
-    axs[3].set_xlabel("Segment length [mm]"); axs[3].set_ylabel("Density")
+    axs[3].set_xlabel("Segment length [mm]"); axs[3].set_ylabel("% per bin")
     note(fig, "a–b) outlet = plane fitted to path end points; paths ending >1 mm off it stopped inside the domain "
               "(typically slow, high-stress near-wall/valve-gap points). Rerun with --completed-only to exclude them. "
               "c) dose in segments where τ jumps >2× is sensitive to end-point stress sampling (export more segments). "

@@ -43,12 +43,23 @@ def check_constants():
             and np.isclose(h["beta"], c["beta"]), k
 
 
+SNAP_PHASES = (16.67, 33.33, 50.0, 66.67, 83.33)   # the five simulated sixths of systole
+
+
 def phase_from_name(path: Path) -> float | None:
-    """'haemline_50cc_1667%.csv' -> 16.67 ; '..._8300%.csv' -> 83.0"""
-    m = re.search(r"_(\d+)%", path.name)
+    """Phase in % systole from the file name.
+
+    'haemline_50cc_1667%.csv' -> 16.67   (digits without a point = hundredths)
+    '35cc 120BPM 16.67%.csv'  -> 16.67   (explicit decimal point)
+    '..._8300%.csv'           -> 83.33   (snapped: within 0.5 of a simulated sixth)
+    """
+    m = re.search(r"(\d+(?:\.\d+)?)%", path.name)
     if not m:
         return None
-    return int(m.group(1)) / 100.0
+    txt = m.group(1)
+    val = float(txt) if "." in txt else int(txt) / 100.0
+    near = min(SNAP_PHASES, key=lambda p: abs(p - val))
+    return near if abs(near - val) <= 0.5 else val
 
 
 # ---------------------------------------------------------------------------
@@ -251,7 +262,7 @@ def load_snapshot(path: Path, cache_dir: Path | None = None, floor_scale=1.0) ->
     cp = cache_dir / key
     if cp.exists():
         z = np.load(cp, allow_pickle=False)
-        phase = float(z["phase"]) if np.isfinite(z["phase"]) else None
+        phase = phase_from_name(path)          # always from the name (parser may change)
         s = Snapshot(path.stem, phase, z["pid"], z["xyz"], z["tau"], z["vel"],
                      z["dt"], z["t"], z["floored"], z["offsets"])
         s.paths = _path_table(s)

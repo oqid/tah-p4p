@@ -1,0 +1,22 @@
+{
+ "file": "35cc 171BPM 66.67%.csv",
+ "phase_pct": 66.67,
+ "GW_HI3_mean": 0.0001822895953288059,
+ "GW_HI2_mean": 7.916926745160967e-05,
+ "GW_HI3_vweighted": 0.00018390531999933166,
+ "GW_NIH_HI3_vweighted_mg100L": 19.310058599929825,
+ "n_paths": 4899,
+ "SA_median": 0.46708474338210126,
+ "transit_ms_median": 89.45844444344233,
+ "peak_stress_max": 201.900162,
+ "inlet_speed_mean": 0.1389215881304348,
+ "explore_core_max_rel_err_HI3": 0.0,
+ "HO_HI3_mean": 2.5666332160311047e-06,
+ "HO_HI2_mean": 1.1694104509241534e-06,
+ "HO_HI3_vweighted": 2.596161605360388e-06,
+ "HO_NIH_HI3_vweighted_mg100L": 0.2725969685628407,
+ "TZ_HI3_mean": 2.94030218762208e-05,
+ "TZ_HI2_mean": 8.726349950744444e-06,
+ "TZ_HI3_vweighted": 2.972247884314883e-05,
+ "TZ_NIH_HI3_vweighted_mg100L": 3.1208602785306265
+}

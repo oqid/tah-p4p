@@ -19,7 +19,7 @@ import pandas as pd
 
 RHO, MU = 1060.0, 0.0035
 BASE = dict(L=56.211e-3, S=0.02, A_out=4.64768e-4)
-VALVE_ANGLE_DEG = {16.67: 24.9, 33.33: 49.8, 50.0: 75.0, 66.67: 50.1, 83.0: 25.2}
+VALVE_ANGLE_DEG = {16.67: 24.9, 33.33: 49.8, 50.0: 75.0, 66.67: 50.1, 83.33: 25.2}
 
 
 def dome(h, L):
@@ -44,7 +44,11 @@ def operating_point(phase_pct, bpm=120.0, scale=1.0, systolic_fraction=0.5, angl
     v = np.pi * g["S"] / (2 * Ts) * np.sin(np.pi * f)
     A_d, _ = dome(g["S"] * f, g["L"])
     Q = v * A_d
-    ang = VALVE_ANGLE_DEG.get(round(phase_pct, 2)) if angle_deg is None else angle_deg
+    if angle_deg is None:
+        key = min(VALVE_ANGLE_DEG, key=lambda p: abs(p - phase_pct))
+        ang = VALVE_ANGLE_DEG[key] if abs(key - phase_pct) <= 0.5 else None
+    else:
+        ang = angle_deg
     open_frac = 1 - np.cos(np.radians(ang)) if ang is not None else np.nan
     D = np.sqrt(4 * g["A_out"] / np.pi)
     U_out = Q / g["A_out"]
@@ -70,7 +74,7 @@ def stroke(bpm=120.0, scale=1.0, systolic_fraction=0.5, n=2001):
             "t": t, "Q_ml_s": v * A * 1e6}
 
 
-def table(phases=(16.67, 33.33, 50.0, 66.67, 83.0), **kw):
+def table(phases=(16.67, 33.33, 50.0, 66.67, 83.33), **kw):
     return pd.DataFrame([operating_point(p, **kw) for p in phases])
 
 

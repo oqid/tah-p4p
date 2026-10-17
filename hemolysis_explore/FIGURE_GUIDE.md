@@ -137,6 +137,29 @@ This is the restyled version of `outputs_snapshots\systole_comparison\empirical_
   - These are lysis boundaries; platelet activation can occur below them.
   - It uses all paths, including those that stop at the valve, as a worst case.
 
+---
+
+## Three-case comparison figures (35 cc vs 50 cc, from `compare_figures.py`)
+
+* **C1 `size_comparison` (main Results figure for the size question).** Per-phase 35/50 GW HI3 ratio with bootstrap CIs, set against the similarity prediction bands. 120 BPM sits at about 1 (0.72–1.01); 171 BPM sits at about 1.8–1.9 (1.43–1.94), inside the 1.79–2.38 prediction.
+* **C5 `size_mechanism` (the F2 b/c mechanism plot for all three cases).** HI3 against inflow and against valve angle, with one line per case.
+  - 35 cc 120 BPM moves *left* (less flow) at the same height.
+  - 35 cc 171 BPM sits at the same inflow as 50 cc but about 1.8× higher. The same flow through a smaller valve means higher stress.
+  - All three keep the U shape, so the phase mechanism is the same at both sizes.
+* **C6 `size_lysis_envelopes` (the F7 empirical-lysis plot for all three cases).** One panel per phase. The 171 BPM envelope moves toward the red-cell curve, giving the lowest margin of the study: SF 2.5 at 83.33% (peak path stress 348 Pa). Every case still stays below both curves.
+* **C2 `size_dose_maps`:** the damage stays in the same place (valve ring and outflow tract) at both sizes. Good for the appendix, or for one sentence in the Results.
+* **C3 `size_lysis_sa`:** SA medians are unchanged (ratio 1.00–1.06), which contrasts with Marom's 1.56×. This is Discussion material.
+* **C4 `convergence_monitor`:** the steadiness check for the 35 cc solve (±0.7% shear, about ±1.7% HI3). Put it in the appendix.
+* **Per-case F1–F7 sets** are in `report_figs/35cc_120BPM` and `report_figs/35cc_171BPM`. They are mainly for the appendix or for checking; C5 and C6 already combine the cases.
+
+## Report additions to plan (supervisor request, 17 Oct)
+
+* Include **one or two CFD flow/contour screenshots from CFD-Post** to discuss stagnation and recirculation (washout). Candidates:
+  - A velocity contour with in-plane vectors or streamlines on the XZ mid-plane at 50% systole (valve fully open). This shows the jet, and the recirculation behind the valve and in the dome.
+  - The same view at 16.67% or 83.33% (valve nearly closed), or a low-velocity iso-volume (for example |u| < 0.05 m/s) to show stagnation zones.
+  - If possible, use the same plane and colour scale for 50 cc and 35 cc 171 BPM.
+* These link to F3 and C2: the dose sits at the valve ring and outflow tract, while the slow regions (the dark, low-stress paths in F3) are where thrombosis rather than haemolysis is the concern.
+
 ## Appendix candidates (already generated)
 
 * `02_stress_time_map`: per-path τ_eff vs transit with iso-HI3 lines. A good bridge between F2 and F3 if you have room.

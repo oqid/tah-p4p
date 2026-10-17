@@ -21,6 +21,12 @@ WIDTH = 6.3                     # inches ≈ 16 cm text width; use WIDTH/2 for h
 PHASE_COLOURS = ["#2D1E5C", "#5B3A8E", "#9B4F96", "#D0668F", "#EE9A6B"]   # 16.67 … 83 %
 PHASE_MARKERS = ["o", "s", "D", "^", "v"]
 DEVICE_COLOURS = {"50 cc": "#2E6DB4", "35 cc": "#C2477F"}
+# three-case comparison (validated set: CVD dE >= 8.5; orange needs labels/legend)
+CASE_STYLE = {
+    "50 cc 120 BPM": dict(color="#2E6DB4", marker="o", ls="-"),
+    "35 cc 120 BPM": dict(color="#C2477F", marker="s", ls="--"),
+    "35 cc 171 BPM": dict(color="#D98A1E", marker="^", ls="-."),
+}
 TIME_TERM, STRESS_TERM = "#8FB8DE", "#D98CB3"                            # F2d bars
 INK, MUTED, GRID = "#1F1F1F", "#6B6B6B", "#E6E6E6"
 FORMATS = ("png", "pdf")
