@@ -1,10 +1,9 @@
-"""Outlet flow and cardiac output for every case, from the INLET (mass conservation).
+"""Flow and cardiac output for every case, from the measured CFX massFlow (massflow.py).
 
-Q(phase) = mean diaphragm seed speed in the export x dome surface area A_dome(h),
-with h = S * x_hat (x_hat from the Sim Tracker) and every length scaled by s (0.888 for 35 cc).
-For 50 cc this matches the CFD outlet flow (Sim Tracker) within 4 %. The 35 cc
-outlet integrals recorded in the tracker exceed this inflow by 8-104 % and violate
-mass conservation, so they are reported for reference only.
+Q(phase) = massFlow()@diaphragm inlet / rho; inlet and outlet agree within 0.01 %.
+For reference the table also lists the analytic estimate (mean seed speed x dome
+surface area, h = S * x_hat, lengths scaled by s) and the Sim Tracker outlet
+integrals, whose 35 cc entries were mis-recorded and are not used.
 Integration over systole uses estimate_cardiac_output.estimate (PCHIP and trapezoid).
 
     python cardiac_output_cases.py OUTDIR [FOLDER_50 FOLDER_35_120 FOLDER_35_171]
@@ -14,6 +13,7 @@ import json, sys
 from pathlib import Path
 import numpy as np, pandas as pd
 import operating_point as op
+import massflow as mf
 from estimate_cardiac_output import estimate
 
 PH = [16.67, 33.33, 50.0, 66.67, 83.33]
@@ -47,22 +47,22 @@ def main(out, folders=None):
         for f, p, xh, qt in zip(files, PH, X_HAT, q_tracker):
             v = seed_speed(f)
             A, _ = op.dome(g["S"] * xh, g["L"])
-            q = v * A * 6e4
+            q_an = v * A * 6e4
+            q = mf.q_l_min(s, bpm, p)
             q_in.append(q)
             rows.append({"case": lab, "phase_pct": p, "bpm": bpm, "length_scale": s,
                          "diaphragm_speed_cm_s": v * 100, "dome_area_mm2": A * 1e6,
-                         "Q_inlet_l_min": q, "Q_tracker_outlet_l_min": qt, "tracker_over_inlet": qt / q})
+                         "Q_massflow_l_min": q, "inlet_outlet_imbalance_pct": mf.imbalance_pct(s, bpm, p),
+                         "Q_analytic_l_min": q_an, "analytic_over_massflow": q_an / q,
+                         "Q_tracker_outlet_l_min": qt})
         e_in = estimate(PH, q_in, bpm)
-        e_tr = estimate(PH, q_tracker, bpm)
-        summary[lab] = {"inlet_based": e_in["methods"], "tracker_based": e_tr["methods"],
-                        "systole_ms": e_in["systole_seconds"] * 1e3}
+        summary[lab] = {"massflow_based": e_in["methods"], "systole_ms": e_in["systole_seconds"] * 1e3}
     pd.DataFrame(rows).to_csv(out / "flows_by_phase.csv", index=False)
     (out / "cardiac_output.json").write_text(json.dumps(summary, indent=2))
     for lab, d in summary.items():
-        i, t = d["inlet_based"], d["tracker_based"]
-        print(f"{lab}: inlet SV {i['trapezoid']['stroke_volume_ml']:.1f}-{i['pchip']['stroke_volume_ml']:.1f} mL, "
-              f"CO {i['trapezoid']['cardiac_output_l_min']:.2f}-{i['pchip']['cardiac_output_l_min']:.2f} L/min | "
-              f"tracker CO {t['trapezoid']['cardiac_output_l_min']:.2f}-{t['pchip']['cardiac_output_l_min']:.2f}")
+        i = d["massflow_based"]
+        print(f"{lab}: massFlow SV {i['trapezoid']['stroke_volume_ml']:.1f}-{i['pchip']['stroke_volume_ml']:.1f} mL, "
+              f"CO {i['trapezoid']['cardiac_output_l_min']:.2f}-{i['pchip']['cardiac_output_l_min']:.2f} L/min")
     print(pd.DataFrame(rows).round(3).to_string(index=False))
 
 

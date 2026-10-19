@@ -138,7 +138,7 @@ def c1_size_comparison(runs, tab, out, name="size_comparison"):
     ax.set_yscale("log"); logfmt(ax)
     ax.set_yticks([3e-5, 1e-4, 3e-4], ["3e-5", "1e-4", "3e-4"])
     ax.set_xlabel("Systolic phase [%]"); ax.set_ylabel("Mean per-path HI3 [%] (GW)")
-    ax.set_title("a) Predicted damage per pass")
+    ax.set_title("a) Mean HI3")
     ax.legend(loc="upper center", fontsize=6.5)
 
     ax = axs[0, 1]
@@ -148,10 +148,6 @@ def c1_size_comparison(runs, tab, out, name="size_comparison"):
         st = style(r.label)
         lo, hi = t.pred_HI3_ratio_GW_lo.iloc[0], t.pred_HI3_ratio_GW_hi.iloc[0]
         ax.axhspan(lo, hi, color=st["color"], alpha=0.13, lw=0)
-        if r.bpm > runs[0].bpm:
-            ax.text(15.5, hi * 1.03, f"predicted, {r.bpm:g} BPM", color=st["color"], fontsize=6.3, va="bottom")
-        else:
-            ax.text(15.5, lo * 1.03, f"predicted, {r.bpm:g} BPM", color=st["color"], fontsize=6.3, va="bottom")
         off = (k - 0.5) * 1.2
         y = t.ratio_GW_HI3.to_numpy()
         ax.errorbar(t.phase_pct + off, y, yerr=[y - t.ratio_ci_lo, t.ratio_ci_hi - y], color=st["color"],
@@ -161,13 +157,13 @@ def c1_size_comparison(runs, tab, out, name="size_comparison"):
     ax.set_yticks([0.5, 0.75, 1, 1.5, 2, 3], ["0.5", "0.75", "1", "1.5", "2", "3"])
     ax.set_ylim(0.45, 3.2)
     ax.set_xlabel("Systolic phase [%]"); ax.set_ylabel("Mean HI3 ratio, 35/50 cc (95% CI)")
-    ax.set_title("b) Size effect against the scaling prediction")
+    ax.set_title("b) HI3 ratio, 35/50 cc")
     ax.legend(loc="lower right", fontsize=6.3)
 
     for ax, col, pred_cols, ttl, ylab in (
-            (axs[1, 0], "ratio_transit_geomean", ("pred_T_ratio",), "c) Transit time", "Transit-time ratio, 35/50 cc"),
+            (axs[1, 0], "ratio_transit_geomean", ("pred_T_ratio",), "c) Transit-time ratio", "Transit-time ratio, 35/50 cc"),
             (axs[1, 1], "ratio_tau_eff_geomean", ("pred_tau_ratio_viscous", "pred_tau_ratio_inertial"),
-             "d) Effective stress", "Effective-stress ratio, 35/50 cc")):
+             "d) Effective-stress ratio", "Effective-stress ratio, 35/50 cc")):
         for k, r in enumerate(runs[1:]):
             t = tab[tab.case == r.label]
             st = style(r.label)
@@ -178,11 +174,7 @@ def c1_size_comparison(runs, tab, out, name="size_comparison"):
         ax.set_xlabel("Systolic phase [%]"); ax.set_ylabel(ylab); ax.set_title(ttl)
         ax.axhline(1, color=MUTED, lw=0.6)
     axs[1, 0].set_ylim(0.55, 1.2)
-    axs[1, 0].text(0.02, 0.04, "dashed: predicted (T ∝ 1/BPM)", transform=axs[1, 0].transAxes,
-                   fontsize=6.3, color=MUTED)
     axs[1, 1].set_ylim(0.6, 1.8)
-    axs[1, 1].text(0.02, 0.04, "dashed: viscous, dotted: inertial prediction", transform=axs[1, 1].transAxes,
-                   fontsize=6.3, color=MUTED)
     axs[1, 1].legend(loc="center right", fontsize=6.3)
     save(fig, out, name)
 
@@ -252,7 +244,7 @@ def c3_lysis_sa(runs, tab, out):
         ax.set_xlabel("Systolic phase [%]"); ax.set_title(ttl)
         ax.axhline(1, color=INK, lw=0.8, ls=":")
     axs[0].set_ylabel("Minimum safety factor")
-    fig.legend(*axs[0].get_legend_handles_labels(), loc="outside upper center", ncol=3, fontsize=6.8)
+    fig.legend(*axs[0].get_legend_handles_labels(), loc="outside lower center", ncol=3, fontsize=6.8)
     axs[2].set_yscale("log"); logfmt(axs[2])
     axs[2].set_yticks([0.3, 1, 3], ["0.3", "1", "3"])
     axs[2].set_xlabel("Systolic phase [%]"); axs[2].set_ylabel("SA [dyn·s/cm²]")
@@ -280,10 +272,6 @@ def c4_monitor(monitor_csv, out, label="35 cc, 83.33%, 120 BPM"):
     ax.plot(x, run, color=INK, lw=1.2, label="running mean over one period")
     ax.axhline(mean, color=MUTED, ls="--", lw=0.8)
     ax.set_xlabel("Accumulated time step"); ax.set_ylabel("Area-averaged shear\nstrain rate at valve [1/s]")
-    ax.set_title(f"Valve shear-rate monitor, {label}")
-    ax.text(0.99, 0.97, f"mean {mean:.0f} 1/s, ±{100 * half / mean:.1f}% (SD {100 * sd / mean:.2f}%), "
-            f"period ≈ {period:.0f} steps", transform=ax.transAxes, ha="right", va="top", fontsize=6.5,
-            color=INK, bbox=dict(fc="white", ec="none", alpha=0.85))
     ax.set_ylim(y.min() - 6, y.max() + 12)
     ax.legend(loc="upper left", fontsize=6.5)
     save(fig, out, "convergence_monitor")
@@ -300,10 +288,14 @@ def c5_mechanism(runs, tab, out):
     for r in runs:
         st = style(r.label)
         t = tab[tab.case == r.label].sort_values("phase_pct")
-        v = np.array([r.snaps[p].paths.v_inlet.mean() for p in t.phase_pct])
-        g = op.geometry(r.scale)
-        xh = [0.067, 0.25, 0.5, 0.75, 0.933]
-        q = np.array([vi * op.dome(g["S"] * x, g["L"])[0] * 1e6 for vi, x in zip(v, xh)])
+        import massflow as mf
+        if mf.available(r.scale, r.bpm):   # measured CFX massFlow
+            q = np.array([mf.q_ml_s(r.scale, r.bpm, p) for p in t.phase_pct])
+        else:                              # analytic: seed speed x dome area
+            v = np.array([r.snaps[p].paths.v_inlet.mean() for p in t.phase_pct])
+            g = op.geometry(r.scale)
+            xh = [0.067, 0.25, 0.5, 0.75, 0.933]
+            q = np.array([vi * op.dome(g["S"] * x, g["L"])[0] * 1e6 for vi, x in zip(v, xh)])
         ang = np.array([op.operating_point(p)["valve_angle_deg"] for p in t.phase_pct])
         y = t.GW_HI3_mean.to_numpy()
         for ax, x in ((axs[0], q), (axs[1], ang)):
@@ -318,13 +310,10 @@ def c5_mechanism(runs, tab, out):
         ax.set_yticks([3e-5, 1e-4, 3e-4], ["3e-5", "1e-4", "3e-4"])
         ax.set_ylabel("Mean HI3 [%] (GW)")
     axs[0].set_xlabel("Instantaneous inflow Q [mL/s]")
-    axs[0].set_title("a) Against flow: same flow, more damage when smaller")
+    axs[0].set_title("a) HI3 against inflow")
     axs[1].set_xlabel("Outlet-valve opening angle θ [°]")
-    axs[1].set_title("b) Against valve opening")
-    fig.legend(*axs[0].get_legend_handles_labels(), loc="outside upper center", ncol=3, fontsize=6.8)
-    for ax in axs:
-        ax.text(0.98, 0.97, "lines: 16.67 → 83.33%", transform=ax.transAxes, ha="right", va="top",
-                fontsize=6.3, color=MUTED)
+    axs[1].set_title("b) HI3 against valve opening angle")
+    fig.legend(*axs[0].get_legend_handles_labels(), loc="outside lower center", ncol=3, fontsize=6.8)
     save(fig, out, "size_mechanism")
 
 
@@ -350,7 +339,7 @@ def c6_lysis_envelopes(runs, out):
         ax.set_xticks([1e-2, 1, 1e2], ["0.01", "1", "100"])
         ax.set_xlabel("Exposure [ms]")
     axs[0].set_ylabel("Shear stress [Pa]")
-    fig.legend(loc="outside upper center", ncol=5, fontsize=6.5)
+    fig.legend(loc="outside lower center", ncol=5, fontsize=6.5)
     save(fig, out, "size_lysis_envelopes")
 
 

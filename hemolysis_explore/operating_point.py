@@ -2,7 +2,9 @@
 
 Diaphragm (velocity inlet), Inventor parametric sketch revolved about its centre:
     x(t) = 2 L t,  y(t) = Amplitude * Pump * sin(2 pi t),  t in [0, 0.5]
-    -> half-sine dome, radius R = L/2, height h = Amplitude * Pump, Pump = phase fraction
+    -> half-sine dome, radius R = L/2, height h = Amplitude * Pump, where Pump is the
+       normalised position x_hat = (1 - cos(pi f)) / 2 at phase fraction f
+       (0.067, 0.25, 0.5, 0.75, 0.933 in the Sim Tracker; NOT f itself)
     L = 56.211 mm, Amplitude = 20 mm (50 cc)
 Inlet speed (normal to the dome): v = pi S / (2 Ts) sin(pi phase), S = 20 mm
 Q = v * A_dome(phase)  (velocity applied over the whole dome surface)
@@ -33,6 +35,11 @@ def dome(h, L):
     return A, V
 
 
+def x_hat(f):
+    """Normalised diaphragm position at phase fraction f (half-cosine motion law)."""
+    return (1 - np.cos(np.pi * np.asarray(f))) / 2
+
+
 def geometry(scale=1.0):
     return {k: v * (scale ** 2 if k == "A_out" else scale) for k, v in BASE.items()}
 
@@ -42,7 +49,7 @@ def operating_point(phase_pct, bpm=120.0, scale=1.0, systolic_fraction=0.5, angl
     Ts = 60.0 / bpm * systolic_fraction
     f = phase_pct / 100.0
     v = np.pi * g["S"] / (2 * Ts) * np.sin(np.pi * f)
-    A_d, _ = dome(g["S"] * f, g["L"])
+    A_d, _ = dome(g["S"] * x_hat(f), g["L"])
     Q = v * A_d
     if angle_deg is None:
         key = min(VALVE_ANGLE_DEG, key=lambda p: abs(p - phase_pct))
@@ -54,6 +61,7 @@ def operating_point(phase_pct, bpm=120.0, scale=1.0, systolic_fraction=0.5, angl
     U_out = Q / g["A_out"]
     U_jet = Q / (g["A_out"] * open_frac)
     return {"phase_pct": phase_pct, "bpm": bpm, "scale": scale, "systole_ms": Ts * 1e3,
+            "x_hat": float(x_hat(f)),
             "diaphragm_speed_m_s": v, "dome_area_mm2": A_d * 1e6, "Q_ml_s": Q * 1e6,
             "Q_l_min": Q * 6e4, "valve_angle_deg": ang, "valve_open_frac": open_frac,
             "U_outlet_mean_m_s": U_out, "U_jet_proxy_m_s": U_jet,
@@ -67,7 +75,7 @@ def stroke(bpm=120.0, scale=1.0, systolic_fraction=0.5, n=2001):
     t = np.linspace(0, Ts, n)
     f = t / Ts
     v = np.pi * g["S"] / (2 * Ts) * np.sin(np.pi * f)
-    A = np.array([dome(g["S"] * x, g["L"])[0] for x in f])
+    A = np.array([dome(g["S"] * x, g["L"])[0] for x in x_hat(f)])
     sv = np.trapezoid(v * A, t)
     return {"bc_stroke_volume_ml": sv * 1e6, "bc_cardiac_output_l_min": sv * 1e3 * bpm,
             "cad_dome_swept_volume_ml": dome(g["S"], g["L"])[1] * 1e6,

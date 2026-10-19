@@ -1,0 +1,11 @@
+{
+ "mean":5033.3469519306,
+ "sd_pct":0.2847522669,
+ "half_range_pct":0.7038215394,
+ "period_steps":1330,
+ "steps":[
+  2752.0,
+  26599.0
+ ],
+ "implied_HI3_half_range_pct_GW":1.7089144533
+}

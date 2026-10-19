@@ -1,0 +1,47 @@
+{
+  "50 cc 120 BPM": {
+    "massflow_based": {
+      "pchip": {
+        "mean_systolic_flow_l_min": 13.169696536799062,
+        "stroke_volume_ml": 54.87373556999609,
+        "cardiac_output_l_min": 6.584848268399531
+      },
+      "trapezoid": {
+        "mean_systolic_flow_l_min": 12.826754015094336,
+        "stroke_volume_ml": 53.4448083962264,
+        "cardiac_output_l_min": 6.413377007547168
+      }
+    },
+    "systole_ms": 250.0
+  },
+  "35 cc 120 BPM": {
+    "massflow_based": {
+      "pchip": {
+        "mean_systolic_flow_l_min": 9.279963281677954,
+        "stroke_volume_ml": 38.666513673658145,
+        "cardiac_output_l_min": 4.639981640838977
+      },
+      "trapezoid": {
+        "mean_systolic_flow_l_min": 9.032040353773585,
+        "stroke_volume_ml": 37.63350147405661,
+        "cardiac_output_l_min": 4.5160201768867925
+      }
+    },
+    "systole_ms": 250.0
+  },
+  "35 cc 171 BPM": {
+    "massflow_based": {
+      "pchip": {
+        "mean_systolic_flow_l_min": 13.171471722255598,
+        "stroke_volume_ml": 38.51307521127367,
+        "cardiac_output_l_min": 6.585735861127798
+      },
+      "trapezoid": {
+        "mean_systolic_flow_l_min": 12.828376579245283,
+        "stroke_volume_ml": 37.50987303872889,
+        "cardiac_output_l_min": 6.414188289622641
+      }
+    },
+    "systole_ms": 175.43859649122805
+  }
+}

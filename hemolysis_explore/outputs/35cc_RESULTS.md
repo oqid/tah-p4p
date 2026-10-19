@@ -1,3 +1,5 @@
+> **SUPERSEDED (17 Oct 2026):** the 16.67 % numbers here come from the unscaled-geometry runs, and flows are analytic. Use report_figs/size_summary*.csv, size_lysis_margins.csv and outputs/cardiac_output (massFlow-based) instead.
+
 # 35 cc vs 50 cc results (run 17 Oct 2026)
 
 **Cases**

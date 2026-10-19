@@ -1,0 +1,27 @@
+# P4P report figure style — edit here to restyle every report figure at once.
+# Loaded by report_style.apply(). Values are standard matplotlib rcParams.
+
+font.size:          8
+axes.titlesize:     8.5
+axes.titleweight:   bold
+axes.labelsize:     8
+xtick.labelsize:    7
+ytick.labelsize:    7
+legend.fontsize:    6.8
+legend.frameon:     False
+
+axes.edgecolor:     6B6B6B
+axes.labelcolor:    1F1F1F
+xtick.color:        6B6B6B
+ytick.color:        6B6B6B
+axes.spines.top:    False
+axes.spines.right:  False
+axes.grid:          True
+grid.color:         E6E6E6
+grid.linewidth:     0.6
+
+lines.linewidth:    1.5
+figure.dpi:         110
+savefig.dpi:        300
+savefig.bbox:       standard
+pdf.fonttype:       42     # editable text in the PDFs

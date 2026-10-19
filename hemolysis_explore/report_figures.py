@@ -41,6 +41,11 @@ import empirical_envelope as ee
 import report_style as rs
 import scaling
 
+
+def snap(p):
+    """Label a phase by its nominal sixth (the 50 cc file is named _8300%)."""
+    return min(ec.SNAP_PHASES, key=lambda q: abs(q - p))
+
 HERE = Path(__file__).resolve().parent
 rs.apply()                              # look & feel: p4p_report.mplstyle + report_style.py
 W = rs.WIDTH
@@ -123,23 +128,24 @@ def f1_model_states(case, opt, out):
         # --- diaphragm (velocity inlet) ---
         ax = axs[0, j]
         for k, rr in opt.iterrows():
-            ax.plot(r, S * rr.phase_pct / 100 * np.cos(np.pi * r / L), color="#D0D0D0", lw=0.6, zorder=1)
+            ax.plot(r, S * op.x_hat(rr.phase_pct / 100) * np.cos(np.pi * r / L), color="#D0D0D0", lw=0.6, zorder=1)
         ax.plot([-R, R], [0, 0], color=MUTED, lw=0.8, ls=":", zorder=1)
-        y = S * f * np.cos(np.pi * r / L)
+        xh = float(op.x_hat(f))                    # normalised diaphragm position (half-cosine law)
+        y = S * xh * np.cos(np.pi * r / L)
         ax.fill_between(r, 0, y, color=col, alpha=0.15, lw=0, zorder=2)
         ax.plot(r, y, color=col, lw=1.8, zorder=3)
         # inlet velocity arrows, normal to the surface, length ∝ speed
         alen = 9.0 * row.diaphragm_speed_m_s / vmax
         for x0 in np.linspace(-0.75 * R, 0.75 * R, 5):
-            y0 = S * f * np.cos(np.pi * x0 / L)
-            dy = -S * f * np.pi / L * np.sin(np.pi * x0 / L)
+            y0 = S * xh * np.cos(np.pi * x0 / L)
+            dy = -S * xh * np.pi / L * np.sin(np.pi * x0 / L)
             nx, ny = -dy, 1.0
             nn = np.hypot(nx, ny)
             ax.annotate("", (x0 + alen * nx / nn, y0 + alen * ny / nn), (x0, y0),
                         arrowprops=dict(arrowstyle="-|>", color=col, lw=0.9, mutation_scale=6), zorder=4)
         ax.set_xlim(-R - 1, R + 1); ax.set_ylim(-9, S + 9)
         ax.set_title(f"{row.phase_pct:g}% systole", color=INK)
-        ax.text(0, -1.5, f"h = {S * f:.1f} mm\nv = {row.diaphragm_speed_m_s * 1e3:.0f} mm/s",
+        ax.text(0, -1.5, f"h = {S * xh:.1f} mm\nv = {row.diaphragm_speed_m_s * 1e3:.0f} mm/s",
                 ha="center", va="top", fontsize=6.3, color=INK)
         # --- outlet valve (section through the orifice, flow left -> right) ---
         ax = axs[1, j]
@@ -180,7 +186,7 @@ def f2_mechanism(case, opt, out):
             label="outlet-reaching paths only")
     ax.set_yscale("log"); logfmt(ax)
     ax.set_xlabel("Systolic phase [%]"); ax.set_ylabel("Mean per-path HI3 [%] (GW)")
-    ax.set_title("a) HI3 is U-shaped through systole")
+    ax.set_title("a) Mean HI3 through systole")
     ax.legend(loc="upper center")
     lo_, hi_ = min(t.GW_HI3_mean_completed_paths.min(), y.min()) * 0.6, y.max() * 2.2
     ax.set_ylim(lo_, hi_)
@@ -188,16 +194,14 @@ def f2_mechanism(case, opt, out):
     ax.set_yticks(tk, [f"{v:.0e}".replace("e-0", "e-") for v in tk])
 
     for ax, x, xl, ttl in ((axs[0, 1], opt.Q_ml_s.to_numpy(), "Instantaneous inflow Q [mL/s]",
-                            "b) HI3 falls as flow rises…"),
+                            "b) HI3 against inflow"),
                            (axs[1, 0], opt.valve_angle_deg.to_numpy(), "Outlet-valve opening angle θ [°]",
-                            "c) …and tracks how far the valve is open")):
+                            "c) HI3 against valve opening angle")):
         smooth_path(ax, x, y)
         for i in range(len(ph)):
             ax.plot(x[i], y[i], marker=PM[i], color=PC[i], ms=6.5, ls="none")
         offs = [(6, -6), (6, -7), (6, 6), (6, 7), (-7, 4) if x.max() > 100 else (2, 10)]
         label_points(ax, x, y, [f"{p:g}%" for p in ph], offsets=offs)
-        ax.text(0.96, 0.95, "line: phase order\n16.67 → 83%", transform=ax.transAxes,
-                ha="right", va="top", fontsize=6.5, color=MUTED)
         ax.set_yscale("log"); logfmt(ax)
         ax.set_xlabel(xl); ax.set_ylabel("Mean HI3 [%] (GW)"); ax.set_title(ttl)
         lo_, hi_ = y.min() * 0.75, y.max() * 1.45
@@ -214,12 +218,12 @@ def f2_mechanism(case, opt, out):
     ax.bar(x + 0.19, [d["stress"] for d in dec], 0.36, color=rs.STRESS_TERM, label="stress term α·Δ⟨ln τ_eff⟩")
     ax.plot(x, [d["total_geo"] for d in dec], "_", color="k", ms=14, mew=1.6, label="total")
     ax.axhline(0, color=MUTED, lw=0.7)
-    ax.set_xticks(x, [f"{p:g}" for p in ph]); ax.set_xlabel("Systolic phase [%]")
+    ax.set_xticks(x, [f"{snap(p):g}" for p in ph]); ax.set_xlabel("Systolic phase [%]")
     ax.set_ylabel(f"log₁₀ change vs {ph[ref_i]:g}%")
     sec = ax.secondary_yaxis("right", functions=(lambda l: 10 ** l, np.log10))
     sec.set_ylabel("× factor"); sec.set_yticks([1, 2, 4, 8, 16])
     sec.yaxis.set_major_formatter(mt.FormatStrFormatter("%g"))
-    ax.set_title("d) Stress, not residence time, drives it")
+    ax.set_title(f"d) Decomposition relative to {ph[ref_i]:g}% systole")
     ax.legend(loc="upper center", fontsize=6.3)
     save(fig, out, "F2_mechanism")
 
@@ -246,7 +250,7 @@ def f3_spatial(case, opt, out, phases=(16.67, 50.0, 83.33)):
         r = opt[np.isclose(opt.phase_pct, s.phase)].iloc[0]
         ax = axs[0, j]
         m1 = _path_stress(ax, s)
-        ax.set_title(f"{s.phase:g}% systole · valve {r.valve_angle_deg:g}°")
+        ax.set_title(f"{snap(s.phase):g}% systole · valve {r.valve_angle_deg:g}°")
         ax = axs[1, j]
         xyz = s.xyz * 1e3
         mid = xyz.copy(); mid[1:] = 0.5 * (xyz[1:] + xyz[:-1])
@@ -280,7 +284,7 @@ def f4_timing(case, out):
         inner, tte = s.inner("GW"), s.time_to_exit() * 1e3
         o = np.argsort(tte); cum = np.cumsum(inner[o]) / inner.sum()
         rem = case.Ts * 1e3 * (1 - s.phase / 100)
-        axs[0].plot(w, np.interp(w, tte[o], cum), color=PC[i], label=f"{s.phase:g}%")
+        axs[0].plot(w, np.interp(w, tte[o], cum), color=PC[i], label=f"{snap(s.phase):g}%")
         axs[0].plot(rem, np.interp(rem, tte[o], cum), marker=PM[i], color=PC[i], ms=5)
         base = s.paths.GW_HI3.mean()
         axs[1].plot(ws, [eh.truncated_hi3(s, x / 1e3).mean() / base for x in ws], color=PC[i])
@@ -303,12 +307,12 @@ def f5_completion(case, out):
         p = s.paths; inc = ~p.completed.to_numpy()
         E = p[["end_x", "end_z"]].to_numpy() * 1e3
         axs[0].scatter(E[~inc, 0], E[~inc, 1], s=1, color="#C8C8C8", rasterized=True,
-                       label="ends on outlet" if i == 0 else None)
+                       label="outlet-reaching" if i == 0 else None)
         axs[0].scatter(E[inc, 0], E[inc, 1], s=5 + 60 * p.GW_HI3.to_numpy()[inc] / p.GW_HI3.max(),
-                       marker=PM[i], facecolor="none", edgecolor=PC[i], lw=0.6, label=f"{s.phase:g}% stops early")
+                       marker=PM[i], facecolor="none", edgecolor=PC[i], lw=0.6, label=f"{snap(s.phase):g}%")
         fr.append(inc.mean() * 100); sh.append(p.GW_HI3[inc].sum() / p.GW_HI3.sum() * 100); ph.append(s.phase)
     axs[0].set_aspect("equal"); axs[0].set_xlabel("X [mm]"); axs[0].set_ylabel("Z [mm]")
-    axs[0].set_title("a) Path end points (size ∝ HI3)")
+    axs[0].set_title("a) Path end points")
     axs[0].legend(fontsize=5.8, loc="upper left", markerscale=1.0, handletextpad=0.2, labelspacing=0.3)
     axs[0].set_xlim(-38, 32); axs[0].set_ylim(-8, 30)
     x = np.arange(len(ph))
@@ -317,8 +321,8 @@ def f5_completion(case, out):
     for xi, (a, b) in enumerate(zip(fr, sh)):
         axs[1].text(xi - 0.2, a + 1, f"{a:.1f}", ha="center", fontsize=6)
         axs[1].text(xi + 0.2, b + 1, f"{b:.0f}", ha="center", fontsize=6)
-    axs[1].set_xticks(x, [f"{p:g}" for p in ph]); axs[1].set_xlabel("Systolic phase [%]")
-    axs[1].set_ylabel("%"); axs[1].set_title("b) Early-stopping paths vs their HI3")
+    axs[1].set_xticks(x, [f"{snap(p):g}" for p in ph]); axs[1].set_xlabel("Systolic phase [%]")
+    axs[1].set_ylabel("%"); axs[1].set_title("b) Incomplete paths")
     axs[1].legend(loc="upper left", ncol=2); axs[1].set_ylim(0, 62)
     save(fig, out, "F5_path_completion")
 
@@ -377,7 +381,7 @@ def f7_empirical(case, out):
         rows.append({"phase_pct": s.phase, "min_safety_factor_RBC": sf.get("RBC"),
                      "min_safety_factor_platelet": sf.get("Platelet"),
                      "peak_stress_Pa": env.stress_Pa.max(), "longest_exposure_ms": env.duration_s.max() * 1e3})
-        env.assign(phase_pct=s.phase).to_csv(out / f"F7_envelope_{s.phase:g}.csv", index=False)
+        env.assign(phase_pct=s.phase).to_csv(out / f"F7_envelope_{snap(s.phase):g}.csv", index=False)
     pd.DataFrame(rows).to_csv(out / "F7_lysis_safety_factors.csv", index=False)
     allenv = pd.concat(envs)
     fig, axs = plt.subplots(1, 2, figsize=(W, 2.85), constrained_layout=True)
@@ -390,7 +394,7 @@ def f7_empirical(case, out):
             r = rows[i]
             ax.plot(e.duration_s * 1e3, e.stress_Pa, color=PC[i], ls=LS[i], lw=1.4,
                     marker=PM[i], markevery=0.3, ms=3.5,
-                    label=(f"{s.phase:g}%  (SF {r['min_safety_factor_RBC']:.1f} RBC, "
+                    label=(f"{snap(s.phase):g}%  (SF {r['min_safety_factor_RBC']:.1f} RBC, "
                            f"{r['min_safety_factor_platelet']:.1f} plt)") if j == 1 else None)
         ax.set_xscale("log"); ax.set_yscale("log"); logfmt(ax); logfmt(ax, "x")
         ax.set_xlabel("Longest contiguous exposure [ms]")
@@ -429,7 +433,7 @@ def a1_stress_time(case, out):
         ax.axvline(case.Ts * 1e3 * (1 - s.phase / 100), color=BLUE, lw=0.9)
         ax.plot(p.transit_ms.median(), p.GW_tau_eff.median(), marker=PM[i], color="white", mec=INK, ms=5)
         ax.set_xscale("log"); ax.set_yscale("log"); ax.grid(False)
-        ax.set_title(f"{s.phase:g}%")
+        ax.set_title(f"{snap(s.phase):g}%")
         ax.set_xlabel("T [ms]")
     axs[0].set_ylabel("τ_eff [Pa]")
     fig.colorbar(m, ax=axs.tolist(), shrink=0.9, pad=0.01, label="Share of HI3")
@@ -459,7 +463,7 @@ def a2_dose_maps(case, out):
                 ax.set_ylabel(f"{lab} [mm]")
             if r == 1:
                 ax.set_xlabel("X [mm]")
-        axs[0, j].set_title(f"{s.phase:g}%")
+        axs[0, j].set_title(f"{snap(s.phase):g}%")
     fig.colorbar(m, ax=axs.ravel().tolist(), shrink=0.8, pad=0.01, extend="min", label="Share of linear dose")
     save(fig, out, "A2_dose_maps_all_phases")
 
@@ -487,9 +491,9 @@ def a3_model_sensitivity(case, out):
     for xi, (a3, a2) in enumerate(zip(hi3, hi2)):
         axs[1].text(xi + 0.19, a2 * 1.08, f"{a2 / a3:.2f}", ha="center", fontsize=6, color=INK)
     axs[1].set_yscale("log"); logfmt(axs[1])
-    axs[1].set_xticks(x, [f"{p:g}" for p in ph]); axs[1].set_xlabel("Systolic phase [%]")
+    axs[1].set_xticks(x, [f"{snap(p):g}" for p in ph]); axs[1].set_xlabel("Systolic phase [%]")
     axs[1].set_ylabel("Mean per-path HI [%] (GW)")
-    axs[1].set_title("b) HI2 vs HI3 (labels: HI2/HI3)")
+    axs[1].set_title("b) HI2 and HI3")
     axs[1].legend(loc="upper center", ncol=2)
     save(fig, out, "A3_model_sensitivity")
 
@@ -503,7 +507,7 @@ def a4_sa(case, out):
         lg = np.log10(sa[sa > 0])
         bw = 1.06 * lg.std() * len(lg) ** -0.2
         dens = np.exp(-0.5 * ((grid[:, None] - lg[None, :]) / bw) ** 2).sum(1) / (len(lg) * bw * np.sqrt(2 * np.pi))
-        axs[0].plot(10 ** grid, dens, color=PC[i], label=f"{s.phase:g}%")
+        axs[0].plot(10 ** grid, dens, color=PC[i], label=f"{snap(s.phase):g}%")
         x = np.sort(sa)
         axs[1].step(x, np.arange(len(x), 0, -1) / len(x) * 100, where="pre", color=PC[i])
     for ax in axs:
@@ -512,10 +516,9 @@ def a4_sa(case, out):
         ax.set_xlim(0.08, 60)
         ax.set_xlabel("Path SA [dyn·s/cm²]")
     axs[0].set_ylabel("Density per log₁₀(SA)"); axs[0].set_title("a) SA distribution")
-    axs[0].legend(title="phase", fontsize=6.3, title_fontsize=6.5)
-    axs[0].text(35, axs[0].get_ylim()[1] * 0.9, " 35", fontsize=6.5, color=INK)
     axs[1].set_yscale("log"); axs[1].set_ylabel("Paths with SA ≥ x [%]")
     axs[1].set_title("b) Exposure tail")
+    axs[1].legend(*axs[0].get_legend_handles_labels(), loc="lower left", fontsize=6.3)
     save(fig, out, "A4_stress_accumulation")
 
 
@@ -531,7 +534,7 @@ def a5_resolution(case, out):
         inner = s.inner("GW")
         o = np.argsort(dl)
         cum = np.cumsum(inner[o][::-1])[::-1] / inner.sum()
-        axs[0].plot(np.exp(dl[o]), cum, color=PC[i], label=f"{s.phase:g}%")
+        axs[0].plot(np.exp(dl[o]), cum, color=PC[i], label=f"{snap(s.phase):g}%")
         seg = np.zeros(len(s.tau)); seg[1:] = np.linalg.norm(np.diff(s.xyz, axis=0), axis=1) * 1e3
         ok = ~first
         # fractions per log bin (not densities, which would inflate the short bins)
@@ -543,7 +546,7 @@ def a5_resolution(case, out):
     axs[0].set_xlabel("Stress ratio across one segment"); axs[0].set_ylabel("Share of dose ≥ ratio")
     axs[0].set_title("a) Stress sampling"); axs[0].legend(title="phase", fontsize=6.3, title_fontsize=6.5)
     axs[1].set_xscale("log"); axs[1].set_xlabel("Segment length [mm]"); axs[1].set_ylabel("% per bin")
-    axs[1].set_title("b) Segments (dotted), dose (solid)")
+    axs[1].set_title("b) Segment length")
     save(fig, out, "A5_path_resolution")
 
 
@@ -567,6 +570,12 @@ def main(argv=None):
     v_meas = case.table.inlet_speed_mean_m_s.to_numpy()
     opt["Q_ml_s"] *= v_meas / opt.diaphragm_speed_m_s.to_numpy()
     opt["Q_l_min"] = opt.Q_ml_s * 0.06
+    # prefer the measured CFX massFlow (massflow.py) where it exists
+    import massflow as mf
+    if mf.available(a.scale, a.bpm):
+        opt["Q_ml_s_analytic"] = opt.Q_ml_s
+        opt["Q_ml_s"] = [mf.q_ml_s(a.scale, a.bpm, p) for p in opt.phase_pct]
+        opt["Q_l_min"] = opt.Q_ml_s * 0.06
     opt["diaphragm_speed_m_s"] = v_meas
     opt["cfd_speed_p99_m_s"] = [np.percentile(s.vel, 99) for s in case.all_snaps]
     opt["GW_HI3_mean"] = case.table.GW_HI3_mean.to_numpy()

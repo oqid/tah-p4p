@@ -1,0 +1,20 @@
+  loading 35cc 171BPM 16.67% Updated.csv ...
+  loading 35cc 171BPM 33.33%.csv ...
+  loading 35cc 171BPM 50.00%.csv ...
+  loading 35cc 171BPM 66.67%.csv ...
+  loading 35cc 171BPM 83.33%.csv ...
+/usr/local/lib/python3.10/dist-packages/matplotlib/scale.py:170: RuntimeWarning: divide by zero encountered in log10
+  return self._forward(values)
+  F1
+  F2
+  F3
+  F4
+  F5
+  F6
+  F7
+  A1
+  A2
+  A3
+  A4
+  A5
+done -> report_figs/35cc_171BPM

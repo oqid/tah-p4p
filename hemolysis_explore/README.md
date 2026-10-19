@@ -158,7 +158,8 @@ python compare_figures.py --case "50 cc 120 BPM" ..\z_inputs 120 1.0 --case "35 
 
 * `outputs/35cc_RESULTS.md` collects every number from this run.
 * The loader now reads phases from names like `35cc 120BPM 16.67%.csv`. It snaps the 50 cc `_8300%` file to 83.33%.
-* Flow and cardiac output come from the inlet (seed speed × dome area). The Sim Tracker's 35 cc outlet integrals violate mass conservation, so they are not used.
+* Flow and cardiac output come from the measured CFX massFlow (`massflow.py`, from TAH-P4P Mass Flow.xlsx); inlet and outlet agree within 0.01 % in every case. The analytic estimate (seed speed × dome area) overestimates it by 1.5–4.3 % and is kept for reference only. The Sim Tracker's 35 cc outlet integrals were mis-recorded and are not used.
+* 17 Oct 2026: the 35 cc 16.67 % cases were re-run on the scaled geometry (the first runs used the unscaled 50 cc chamber). All 35 cc outputs in report_figs were regenerated; the pre-fix versions are in ../_to_delete/backup_before_1667_fix_2026-10-17.
 
 ### Per-case report figures and the three-case figures
 

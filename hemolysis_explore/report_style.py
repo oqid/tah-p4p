@@ -32,8 +32,26 @@ INK, MUTED, GRID = "#1F1F1F", "#6B6B6B", "#E6E6E6"
 FORMATS = ("png", "pdf")
 
 
+FONT_DIR = HERE / "fonts"          # Helvetica Neue LT Pro .otf files (the user's own copy)
+
+
+def _register_fonts():
+    """Register the bundled Helvetica Neue and make it the default sans-serif."""
+    from matplotlib import font_manager
+    names = []
+    for f in sorted(FONT_DIR.glob("*.otf")) + sorted(FONT_DIR.glob("*.ttf")):
+        font_manager.fontManager.addfont(str(f))
+        names.append(font_manager.FontProperties(fname=str(f)).get_name())
+    if names:
+        fam = names[0]
+        # family list = per-glyph fallback (symbols such as ∝, →, θ missing from Helvetica)
+        plt.rcParams["font.family"] = [fam, "DejaVu Sans"]
+    return names
+
+
 def apply():
     plt.style.use(str(STYLE))
+    _register_fonts()
 
 
 def save(fig, outdir, name, formats=FORMATS):

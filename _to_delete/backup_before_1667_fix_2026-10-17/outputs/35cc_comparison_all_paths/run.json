@@ -1,0 +1,46 @@
+{
+  "created": "2026-10-17T14:01:08",
+  "cases": [
+    {
+      "label": "50 cc",
+      "folder": "inputs",
+      "bpm": 120.0,
+      "systole_ms": 250.0,
+      "files": [
+        "haemline_50cc_1667%",
+        "haemline_50cc_3333%",
+        "haemline_50cc_5000%",
+        "haemline_50cc_6667%",
+        "haemline_50cc_8300%"
+      ]
+    },
+    {
+      "label": "35 cc 120 BPM",
+      "folder": "in35_120",
+      "bpm": 120.0,
+      "systole_ms": 250.0,
+      "files": [
+        "35cc 120BPM 16.67%",
+        "35cc 120BPM 33.33%",
+        "35cc 120BPM 50.00%",
+        "35cc 120BPM 66.67%",
+        "35cc 120BPM 83.33%"
+      ]
+    },
+    {
+      "label": "35 cc 171 BPM",
+      "folder": "in35_171",
+      "bpm": 171.0,
+      "systole_ms": 175.43859649122805,
+      "files": [
+        "35cc 171BPM 16.67%",
+        "35cc 171BPM 33.33%",
+        "35cc 171BPM 50.00%",
+        "35cc 171BPM 66.67%",
+        "35cc 171BPM 83.33%"
+      ]
+    }
+  ],
+  "systolic_fraction": 0.5,
+  "completed_only": false
+}
